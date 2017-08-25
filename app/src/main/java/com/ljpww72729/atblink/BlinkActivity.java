@@ -17,397 +17,187 @@
 package com.ljpww72729.atblink;
 
 import com.google.android.things.pio.Gpio;
-import com.google.android.things.pio.PeripheralManagerService;
 
 import android.app.Activity;
-import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothGatt;
-import android.bluetooth.BluetoothGattCharacteristic;
-import android.bluetooth.BluetoothGattDescriptor;
-import android.bluetooth.BluetoothGattServer;
-import android.bluetooth.BluetoothGattServerCallback;
-import android.bluetooth.BluetoothManager;
-import android.bluetooth.BluetoothProfile;
-import android.bluetooth.le.AdvertiseCallback;
-import android.bluetooth.le.AdvertiseData;
-import android.bluetooth.le.AdvertiseSettings;
-import android.bluetooth.le.BluetoothLeAdvertiser;
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.pm.PackageManager;
+import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.ParcelUuid;
+import android.os.IBinder;
 import android.util.Log;
 
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import com.ljpww72729.atblink.data.Blink;
+import com.ljpww72729.atblink.module.BoardDefaults;
+import com.ljpww72729.atblink.module.gpio.GpioServer;
+
+import java.util.Random;
 
 /**
- * Sample usage of the Gpio API that blinks an LED at a fixed interval defined in
- * {@link #INTERVAL_BETWEEN_BLINKS_MS}.
+ * Sample usage of the Gpio API that blinks an LE.
  *
  * Some boards, like Intel Edison, have onboard LEDs linked to specific GPIO pins.
  * The preferred GPIO pin to use on each board is in the {@link BoardDefaults} class.
  */
 public class BlinkActivity extends Activity {
     private static final String TAG = BlinkActivity.class.getSimpleName();
-    private static final int INTERVAL_BETWEEN_BLINKS_MS = 1000;
+    private GpioServer gpioServer;
+    // 默认开启状态
+    private boolean mLedState = false;
+    String pinNameR = "BCM22";
+    String pinNameB = "BCM4";
+    String pinNameG = "BCM17";
+    Blink blinkR = new Blink();
+    Blink blinkB = new Blink();
+    Blink blinkG = new Blink();
+
+    private static final int INTERVAL_BETWEEN_BLINKS_MS = 2000;
 
     private Handler mHandler = new Handler();
-    private Gpio mLedGpio;
-    private boolean mLedState = true;
-    private BluetoothManager mBluetoothManager;
-    private BluetoothLeAdvertiser mBluetoothLeAdvertiser;
-    private BluetoothGattServer mBluetoothGattServer;
-    /* Collection of notification subscribers */
-    private Set<BluetoothDevice> mRegisteredDevices = new HashSet<>();
+
+    private GattServerService mBluetoothLeService;
+    // Code to manage Service lifecycle.
+    private final ServiceConnection mServiceConnection = new ServiceConnection() {
+
+        @Override
+        public void onServiceConnected(ComponentName componentName, IBinder service) {
+            mBluetoothLeService = ((GattServerService.GattServerBinder) service).getService();
+            if (!mBluetoothLeService.initialize()) {
+                Log.e(TAG, "Unable to initialize Bluetooth");
+                finish();
+            }
+            // 自动开启GattServer服务
+            mBluetoothLeService.startGattServer();
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName componentName) {
+            mBluetoothLeService = null;
+        }
+    };
+
+    // Handles various events fired by the Service.
+    // ACTION_GATT_CONNECTED: connected to a GATT server.
+    // ACTION_GATT_DISCONNECTED: disconnected from a GATT server.
+    // ACTION_GATT_SERVICES_DISCOVERED: discovered GATT services.
+    // ACTION_DATA_AVAILABLE: received data from the device.  This can be a result of read
+    //                        or notification operations.
+    private final BroadcastReceiver mGattUpdateReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            final String action = intent.getAction();
+            if (GattServerService.ACTION_GATT_CONNECTED.equals(action)) {
+
+            } else if (GattServerService.ACTION_GATT_DISCONNECTED.equals(action)) {
+
+            } else if (GattServerService.ACTION_GATT_SERVICES_DISCOVERED.equals(action)) {
+
+            } else if (GattServerService.ACTION_DATA_AVAILABLE.equals(action)) {
+//                blink = intent.getParcelableExtra(GattServerService.EXTRA_DATA);
+//                gpioServer.notifyBlinkDataChanged(blink);
+            }
+        }
+    };
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Log.i(TAG, "Starting BlinkActivity");
+        blinkR.setStatus(false);
+        blinkB.setStatus(false);
+        blinkG.setStatus(false);
+        gpioServer = new GpioServer();
 
-        PeripheralManagerService service = new PeripheralManagerService();
-        List<String> gpioList = service.getGpioList();
-        for (int i = 0; i < gpioList.size(); i++) {
-            Log.i(TAG, "gpio: " + gpioList.get(i));
-        }
-        try {
-            String pinName = BoardDefaults.getGPIOForLED();
-            mLedGpio = service.openGpio(pinName);
-            mLedGpio.setDirection(Gpio.DIRECTION_OUT_INITIALLY_LOW);
-            Log.i(TAG, "Start blinking LED GPIO pin");
-            // Post a Runnable that continuously switch the state of the GPIO, blinking the
-            // corresponding LED
-            mHandler.post(mBlinkRunnable);
-        } catch (IOException e) {
-            Log.e(TAG, "Error on PeripheralIO API", e);
-        }
+        gpioServer.initGpio(pinNameR, Gpio.DIRECTION_OUT_INITIALLY_HIGH);
+        gpioServer.notifyBlinkDataChanged(pinNameR, blinkR);
 
-        // 获取蓝牙服务
-        mBluetoothManager = (BluetoothManager) getSystemService(BLUETOOTH_SERVICE);
-        BluetoothAdapter bluetoothAdapter = mBluetoothManager.getAdapter();
-        // We can't continue without proper Bluetooth support
-        if (!checkBluetoothSupport(bluetoothAdapter)) {
-            finish();
-        }
+        gpioServer.initGpio(pinNameB, Gpio.DIRECTION_OUT_INITIALLY_HIGH);
+        gpioServer.notifyBlinkDataChanged(pinNameB, blinkB);
 
-        // Register for system Bluetooth events
-        IntentFilter filter = new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED);
-        registerReceiver(mBluetoothReceiver, filter);
-        if (!bluetoothAdapter.isEnabled()) {
-            Log.d(TAG, "Bluetooth is currently disabled...enabling");
-            bluetoothAdapter.enable();
-        } else {
-            Log.d(TAG, "Bluetooth enabled...starting services");
-            startAdvertising();
-            startServer();
-        }
+        gpioServer.initGpio(pinNameG, Gpio.DIRECTION_OUT_INITIALLY_HIGH);
+        gpioServer.notifyBlinkDataChanged(pinNameG, blinkG);
+
+        Intent gattServiceIntent = new Intent(this, GattServerService.class);
+        gattServiceIntent.putExtra(GattServerService.CURRENT_BLINK_DATA, blinkR);
+        bindService(gattServiceIntent, mServiceConnection, BIND_AUTO_CREATE);
+
+        mHandler.post(mBlinkRunnable);
 
     }
 
-    /**
-     * Verify the level of Bluetooth support provided by the hardware.
-     *
-     * @param bluetoothAdapter System {@link BluetoothAdapter}.
-     * @return true if Bluetooth is properly supported, false otherwise.
-     */
-    private boolean checkBluetoothSupport(BluetoothAdapter bluetoothAdapter) {
-
-        if (bluetoothAdapter == null) {
-            Log.w(TAG, "Bluetooth is not supported");
-            return false;
+    @Override
+    protected void onResume() {
+        super.onResume();
+        registerReceiver(mGattUpdateReceiver, makeGattUpdateIntentFilter());
+        if (mBluetoothLeService != null) {
+            mBluetoothLeService.startGattServer();
         }
-
-        if (!getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
-            Log.w(TAG, "Bluetooth LE is not supported");
-            return false;
-        }
-
-        return true;
     }
 
-    /**
-     * Listens for Bluetooth adapter events to enable/disable
-     * advertising and server functionality.
-     */
-    private BroadcastReceiver mBluetoothReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            int state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.STATE_OFF);
-
-            switch (state) {
-                case BluetoothAdapter.STATE_ON:
-                    startAdvertising();
-                    startServer();
-                    break;
-                case BluetoothAdapter.STATE_OFF:
-                    stopServer();
-                    stopAdvertising();
-                    break;
-                default:
-                    // Do nothing
-            }
-
-        }
-    };
-
-    /**
-     * Begin advertising over Bluetooth that this device is connectable
-     * and supports the Current Time Service.
-     */
-    private void startAdvertising() {
-        BluetoothAdapter bluetoothAdapter = mBluetoothManager.getAdapter();
-        bluetoothAdapter.setName("lp_at");
-        Log.i(TAG, "startAdvertising: bluetooth address = " + bluetoothAdapter.getAddress());
-        mBluetoothLeAdvertiser = bluetoothAdapter.getBluetoothLeAdvertiser();
-        if (mBluetoothLeAdvertiser == null) {
-            Log.w(TAG, "Failed to create advertiser");
-            return;
-        }
-
-        AdvertiseSettings settings = new AdvertiseSettings.Builder()
-                .setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_BALANCED)
-                .setConnectable(true)
-                .setTimeout(0)
-                .setTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_MEDIUM)
-                .build();
-
-        ParcelUuid pUuid = new ParcelUuid(BlinkProfile.BLINK_SERVICE);
-        AdvertiseData data = new AdvertiseData.Builder()
-                .setIncludeDeviceName(true)
-                .setIncludeTxPowerLevel(false)
-                .addServiceUuid(pUuid)
-                .build();
-
-        mBluetoothLeAdvertiser
-                .startAdvertising(settings, data, mAdvertiseCallback);
+    @Override
+    protected void onPause() {
+        super.onPause();
+        unregisterReceiver(mGattUpdateReceiver);
     }
-
-    /**
-     * Stop Bluetooth advertisements.
-     */
-    private void stopAdvertising() {
-        if (mBluetoothLeAdvertiser == null) return;
-
-        mBluetoothLeAdvertiser.stopAdvertising(mAdvertiseCallback);
-    }
-
-    /**
-     * Initialize the GATT server instance with the services/characteristics
-     * from the Time Profile.
-     */
-    private void startServer() {
-        mBluetoothGattServer = mBluetoothManager.openGattServer(this, mGattServerCallback);
-        if (mBluetoothGattServer == null) {
-            Log.w(TAG, "Unable to create GATT server");
-            return;
-        }
-
-        mBluetoothGattServer.addService(BlinkProfile.createBlinkService());
-
-        // Initialize the local UI
-//        updateLocalUi(System.currentTimeMillis());
-    }
-
-    /**
-     * Shut down the GATT server.
-     */
-    private void stopServer() {
-        if (mBluetoothGattServer == null) return;
-
-        mBluetoothGattServer.close();
-    }
-
-    /**
-     * Callback to receive information about the advertisement process.
-     */
-    private AdvertiseCallback mAdvertiseCallback = new AdvertiseCallback() {
-        @Override
-        public void onStartSuccess(AdvertiseSettings settingsInEffect) {
-            Log.i(TAG, "LE Advertise Started.");
-        }
-
-        @Override
-        public void onStartFailure(int errorCode) {
-            Log.w(TAG, "LE Advertise Failed: " + errorCode);
-        }
-    };
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        // Remove pending blink Runnable from the handler.
-        mHandler.removeCallbacks(mBlinkRunnable);
-        // Close the Gpio pin.
-        Log.i(TAG, "Closing LED GPIO pin");
-        try {
-            mLedGpio.close();
-        } catch (IOException e) {
-            Log.e(TAG, "Error on PeripheralIO API", e);
-        } finally {
-            mLedGpio = null;
-        }
+        gpioServer.closeGpio();
+        unbindService(mServiceConnection);
+        mBluetoothLeService = null;
+    }
+
+    private static IntentFilter makeGattUpdateIntentFilter() {
+        final IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(GattServerService.ACTION_GATT_CONNECTED);
+        intentFilter.addAction(GattServerService.ACTION_GATT_DISCONNECTED);
+        intentFilter.addAction(GattServerService.ACTION_GATT_SERVICES_DISCOVERED);
+        intentFilter.addAction(GattServerService.ACTION_DATA_AVAILABLE);
+        return intentFilter;
     }
 
     private Runnable mBlinkRunnable = new Runnable() {
         @Override
         public void run() {
             // Exit Runnable if the GPIO is already closed
-            if (mLedGpio == null) {
+            if (gpioServer.getGpid(pinNameR) == null) {
                 return;
             }
-            try {
-                // Toggle the GPIO state
-//                mLedState = !mLedState;
-//                mLedGpio.setValue(mLedState);
-                mLedGpio.setValue(mLedState);
-                Log.d(TAG, "State set to " + mLedState);
+            // Toggle the GPIO state
+            mLedState = !mLedState;
 
-                // Reschedule the same runnable in {#INTERVAL_BETWEEN_BLINKS_MS} milliseconds
-                mHandler.postDelayed(mBlinkRunnable, INTERVAL_BETWEEN_BLINKS_MS);
-            } catch (IOException e) {
-                Log.e(TAG, "Error on PeripheralIO API", e);
+            int random = new Random().nextInt(4);
+            switch (random) {
+                case 1:
+                    blinkR.setStatus(mLedState);
+                    gpioServer.notifyBlinkDataChanged(pinNameR, blinkR);
+                    blinkB.setStatus(mLedState);
+                    gpioServer.notifyBlinkDataChanged(pinNameB, blinkR);
+                    break;
+                case 2:
+                    blinkR.setStatus(mLedState);
+                    gpioServer.notifyBlinkDataChanged(pinNameR, blinkR);
+                    blinkG.setStatus(mLedState);
+                    gpioServer.notifyBlinkDataChanged(pinNameG, blinkR);
+                    break;
+                case 3:
+                    blinkB.setStatus(mLedState);
+                    gpioServer.notifyBlinkDataChanged(pinNameB, blinkR);
+                    blinkG.setStatus(mLedState);
+                    gpioServer.notifyBlinkDataChanged(pinNameG, blinkR);
+                    break;
+                default:
+                    blinkR.setStatus(mLedState);
+                    gpioServer.notifyBlinkDataChanged(pinNameR, blinkR);
+                    break;
             }
+            Log.d(TAG, "State set to " + mLedState);
+            mHandler.postDelayed(mBlinkRunnable, INTERVAL_BETWEEN_BLINKS_MS);
         }
     };
-
-    /**
-     * Callback to handle incoming requests to the GATT server.
-     * All read/write requests for characteristics and descriptors are handled here.
-     */
-    private BluetoothGattServerCallback mGattServerCallback = new BluetoothGattServerCallback() {
-
-        @Override
-        public void onConnectionStateChange(BluetoothDevice device, int status, int newState) {
-            if (newState == BluetoothProfile.STATE_CONNECTED) {
-                Log.i(TAG, "BluetoothDevice CONNECTED: " + device);
-            } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
-                Log.i(TAG, "BluetoothDevice DISCONNECTED: " + device);
-                //Remove device from any active subscriptions
-                mRegisteredDevices.remove(device);
-            }
-        }
-
-        @Override
-        public void onCharacteristicReadRequest(BluetoothDevice device, int requestId, int offset,
-                                                BluetoothGattCharacteristic characteristic) {
-            long now = System.currentTimeMillis();
-            if (BlinkProfile.BLINK_STATUS_CHAR.equals(characteristic.getUuid())) {
-                Log.i(TAG, "Read CurrentTime");
-                mBluetoothGattServer.sendResponse(device,
-                        requestId,
-                        BluetoothGatt.GATT_SUCCESS,
-                        0,
-                        new byte[]{1});
-            } else {
-                // Invalid characteristic
-                Log.w(TAG, "Invalid Characteristic Read: " + characteristic.getUuid());
-                mBluetoothGattServer.sendResponse(device,
-                        requestId,
-                        BluetoothGatt.GATT_FAILURE,
-                        0,
-                        null);
-            }
-        }
-
-        @Override
-        public void onCharacteristicWriteRequest(BluetoothDevice device, int requestId,
-                                                 BluetoothGattCharacteristic characteristic,
-                                                 boolean preparedWrite, boolean responseNeeded,
-                                                 int offset, byte[] value) {
-            Log.i(TAG, "onCharacteristicWriteRequest: " + characteristic.getUuid());
-            if (BlinkProfile.BLINK_STATUS_CHAR.equals(characteristic.getUuid())) {
-                int switchStatus = value[0];
-                if (switchStatus == 1) {
-                    mLedState = true;
-                } else {
-                    mLedState = false;
-                }
-                if (responseNeeded) {
-                    mBluetoothGattServer.sendResponse(device,
-                            requestId,
-                            BluetoothGatt.GATT_SUCCESS,
-                            0,
-                            null);
-                }
-            } else {
-                Log.w(TAG, "Unknown descriptor write request");
-                if (responseNeeded) {
-                    mBluetoothGattServer.sendResponse(device,
-                            requestId,
-                            BluetoothGatt.GATT_FAILURE,
-                            0,
-                            null);
-                }
-            }
-        }
-
-        @Override
-        public void onDescriptorReadRequest(BluetoothDevice device, int requestId, int offset,
-                                            BluetoothGattDescriptor descriptor) {
-            if (BlinkProfile.BLINK_DESC.equals(descriptor.getUuid())) {
-                Log.d(TAG, "Config descriptor read");
-                byte[] returnValue;
-                if (mRegisteredDevices.contains(device)) {
-                    returnValue = BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE;
-                } else {
-                    returnValue = BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE;
-                }
-                mBluetoothGattServer.sendResponse(device,
-                        requestId,
-                        BluetoothGatt.GATT_FAILURE,
-                        0,
-                        returnValue);
-            } else {
-                Log.w(TAG, "Unknown descriptor read request");
-                mBluetoothGattServer.sendResponse(device,
-                        requestId,
-                        BluetoothGatt.GATT_FAILURE,
-                        0,
-                        null);
-            }
-        }
-
-        @Override
-        public void onDescriptorWriteRequest(BluetoothDevice device, int requestId,
-                                             BluetoothGattDescriptor descriptor,
-                                             boolean preparedWrite, boolean responseNeeded,
-                                             int offset, byte[] value) {
-            if (BlinkProfile.BLINK_DESC.equals(descriptor.getUuid())) {
-                if (Arrays.equals(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE, value)) {
-                    Log.d(TAG, "Subscribe device to notifications: " + device);
-                    mRegisteredDevices.add(device);
-                } else if (Arrays.equals(BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE, value)) {
-                    Log.d(TAG, "Unsubscribe device from notifications: " + device);
-                    mRegisteredDevices.remove(device);
-                }
-
-                if (responseNeeded) {
-                    mBluetoothGattServer.sendResponse(device,
-                            requestId,
-                            BluetoothGatt.GATT_SUCCESS,
-                            0,
-                            null);
-                }
-            } else {
-                Log.w(TAG, "Unknown descriptor write request");
-                if (responseNeeded) {
-                    mBluetoothGattServer.sendResponse(device,
-                            requestId,
-                            BluetoothGatt.GATT_FAILURE,
-                            0,
-                            null);
-                }
-            }
-        }
-    };
-
 }
