@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.ljpww72729.atblink;
+package com.ljpww72729.atblink.gpio;
 
 import com.google.android.things.pio.Gpio;
 
@@ -30,6 +30,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.util.Log;
 
+import com.ljpww72729.atblink.GattServerService;
 import com.ljpww72729.atblink.data.Blink;
 import com.ljpww72729.atblink.module.BoardDefaults;
 import com.ljpww72729.atblink.module.gpio.GpioServer;
@@ -42,8 +43,8 @@ import java.util.Random;
  * Some boards, like Intel Edison, have onboard LEDs linked to specific GPIO pins.
  * The preferred GPIO pin to use on each board is in the {@link BoardDefaults} class.
  */
-public class BlinkActivity extends Activity {
-    private static final String TAG = BlinkActivity.class.getSimpleName();
+public class LedRGBActivity extends Activity {
+    private static final String TAG = LedRGBActivity.class.getSimpleName();
     private GpioServer gpioServer;
     // 默认开启状态
     private boolean mLedState = false;

@@ -8,6 +8,7 @@ import android.app.Activity;
 import android.os.Bundle;
 import android.util.Log;
 
+import com.ljpww72729.atblink.gpio.BlinkActivity;
 import com.ljpww72729.atblink.module.BoardDefaults;
 
 import java.io.IOException;
