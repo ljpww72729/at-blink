@@ -31,6 +31,10 @@ public class Blink implements Parcelable {
     public Blink() {
     }
 
+    public Blink(boolean status) {
+        this.status = status;
+    }
+
     protected Blink(Parcel in) {
         this.status = in.readByte() != 0;
     }
@@ -47,7 +51,9 @@ public class Blink implements Parcelable {
         }
     };
 
-    public byte[] getBytes() {
+    // WARNING: 2017/8/31 lipeng 如果使用firebase 实时数据库，该实体类中不能使用非属性的getXXX方法，
+    // 会导致数据同步的时候产生问题，会将其作为一个属性get方法对待
+    public byte[] obtainBytes() {
         byte[] bytes = new byte[20];
         bytes[0] = status ? (byte) 1 : (byte) 0;
         return bytes;
