@@ -1,0 +1,34 @@
+{
+  "device": {
+    "lp_iot_000": {
+      "dId": "lp_iot_000",
+      "dName": "树莓派iot"
+    },
+    "lp_iot_001": {
+      "dId": "lp_iot_001",
+      "dName": "树莓派iot"
+    }
+  },
+  "gpio": {
+    "lp_iot_000": {
+      "lp_iot_00003": {
+        "function": "控制1号LED灯",
+        "status": "1",
+        "emitCheck": "1",
+        "reportCheck": "1"
+      }
+    }
+  },
+  "pin": {
+    "lp_iot_00003": {
+      "gpio": "BCM2",
+      "alias": "SDA",
+      "function": "控制1号LED灯",
+      "status": "1",
+      "emitStatus": "1",
+      "reportStatus": "1",
+      "emitCheck": "1",
+      "reportCheck": "1"
+    }
+  }
+}

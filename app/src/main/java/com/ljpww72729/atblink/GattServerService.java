@@ -289,7 +289,7 @@ public class GattServerService extends Service {
                         requestId,
                         BluetoothGatt.GATT_SUCCESS,
                         0,
-                        blink.obtainBytes());
+                        blink.readBytes());
             } else {
                 // Invalid characteristic
                 Log.w(TAG, "Invalid Characteristic Read: " + characteristic.getUuid());
