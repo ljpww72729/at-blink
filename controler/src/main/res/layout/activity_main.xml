@@ -44,5 +44,17 @@
                 app:layout_constraintLeft_toLeftOf="parent"
                 android:layout_marginRight="8dp"
                 app:layout_constraintRight_toRightOf="parent"/>
+
+        <ai.api.ui.AIButton
+                android:id="@+id/assistant"
+                android:layout_height="152dp"
+                style="@style/Lillian.Microphone"
+                android:layout_marginLeft="8dp"
+                app:layout_constraintLeft_toLeftOf="parent"
+                android:layout_marginRight="8dp"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                android:layout_marginBottom="8dp"/>
+
     </android.support.constraint.ConstraintLayout>
 </layout>

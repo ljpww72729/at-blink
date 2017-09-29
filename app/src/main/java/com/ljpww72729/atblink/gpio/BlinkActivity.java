@@ -35,6 +35,8 @@ import com.ljpww72729.atblink.data.Blink;
 import com.ljpww72729.atblink.module.BoardDefaults;
 import com.ljpww72729.atblink.module.gpio.GpioServer;
 
+import java.io.IOException;
+
 /**
  * Sample usage of the Gpio API that blinks an LE.
  *
@@ -105,7 +107,11 @@ public class BlinkActivity extends Activity {
         blink.setStatus(mLedState);
         gpioServer = new GpioServer();
 
-        gpioServer.initGpio(pinName, Gpio.DIRECTION_OUT_INITIALLY_HIGH);
+        try {
+            gpioServer.initGpio(pinName).setDirection(Gpio.DIRECTION_OUT_INITIALLY_HIGH);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         gpioServer.notifyBlinkDataChanged(pinName, blink);
 
         Intent gattServiceIntent = new Intent(this, GattServerService.class);

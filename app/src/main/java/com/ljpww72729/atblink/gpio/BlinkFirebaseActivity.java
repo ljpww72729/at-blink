@@ -17,21 +17,28 @@
 package com.ljpww72729.atblink.gpio;
 
 import com.google.android.things.pio.Gpio;
+import com.google.android.things.pio.GpioCallback;
+import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.database.Query;
 
 import android.app.Activity;
+import android.app.AlarmManager;
+import android.content.Context;
 import android.os.Bundle;
-import android.os.Handler;
 import android.util.Log;
 
 import com.ljpww72729.atblink.R;
 import com.ljpww72729.atblink.data.Blink;
+import com.ljpww72729.atblink.data.GPIO;
+import com.ljpww72729.atblink.data.RaspberryIotInfo;
 import com.ljpww72729.atblink.module.BoardDefaults;
 import com.ljpww72729.atblink.module.gpio.GpioServer;
+
+import java.io.IOException;
 
 /**
  * Sample usage of the Gpio API that blinks an LE.
@@ -44,48 +51,110 @@ public class BlinkFirebaseActivity extends Activity {
     private GpioServer gpioServer;
     // 默认开启状态
     private boolean mLedState = true;
-    String pinName = "BCM6";
-    Blink blink = new Blink();
-    private DatabaseReference databaseReference;
-    Handler handler = new Handler();
+    private DatabaseReference selfGpioRef;
+
+    //test touch switch
+    private GPIO gpioLed;
+    private Gpio gpioInput;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.act_blink);
-        Log.i(TAG, "Starting BlinkActivity");
-        blink.setStatus(mLedState);
-        gpioServer = new GpioServer();
+        try {
+            AlarmManager am = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+            am.setTimeZone("Asia/Shanghai");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
-        gpioServer.initGpio(pinName, Gpio.DIRECTION_OUT_INITIALLY_HIGH);
-        gpioServer.notifyBlinkDataChanged(pinName, blink);
+        Log.i(TAG, "Starting BlinkActivity");
+        gpioServer = new GpioServer();
         // Write a message to the database
         final FirebaseDatabase database = FirebaseDatabase.getInstance();
-        databaseReference = database.getReference();
-        databaseReference.child("gpio").child(pinName).setValue(blink);
-//        databaseReference.setValue(blink.isStatus());
+        selfGpioRef = database.getReference(RaspberryIotInfo.SELFGPIO);
         // Read from the database
-        databaseReference.addValueEventListener(new ValueEventListener() {
+        Query selfDeviceQuery = selfGpioRef.orderByKey();
+        selfDeviceQuery.addChildEventListener(new ChildEventListener() {
             @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                // This method is called once with the initial value and again
-                // whenever data at this location is updated.
-                Blink value = dataSnapshot.child("gpio").child(pinName).getValue(Blink.class);
-//                blink.setStatus((Boolean) dataSnapshot.getValue());
-                gpioServer.notifyBlinkDataChanged(pinName, value);
-                Log.i(TAG, "Value is: " + value.isStatus());
+            public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+                childBlinkChanged(dataSnapshot);
             }
 
             @Override
-            public void onCancelled(DatabaseError error) {
-                // Failed to read value
-                Log.w(TAG, "Failed to read value.", error.toException());
+            public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+                childBlinkChanged(dataSnapshot);
+            }
+
+            @Override
+            public void onChildRemoved(DataSnapshot dataSnapshot) {
+
+            }
+
+            @Override
+            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
             }
         });
-
-        handler.post(mRandomRunnable);
-
     }
+
+    private void childBlinkChanged(DataSnapshot dataSnapshot) {
+        GPIO gpioEntry = dataSnapshot.getValue(GPIO.class);
+        if (gpioEntry != null && gpioEntry.getGpio().toUpperCase().startsWith("BCM")) {
+            Log.i(TAG, "childBlinkChanged: " + gpioEntry.getGpio() + "," + gpioEntry.getStatus());
+            try {
+                Gpio gpio = gpioServer.initGpio(gpioEntry.getGpio());
+                gpio.setDirection(gpioEntry.getDirection());
+                gpio.setActiveType(gpioEntry.getActive());
+                gpio.setEdgeTriggerType(gpioEntry.getEdge());
+                if (gpioEntry.getGpio().equals("BCM2")) {
+                    gpioLed = gpioEntry;
+                }
+                if (gpioEntry.getDirection() != Gpio.DIRECTION_IN) {
+                    Blink blink = new Blink();
+                    blink.setStatus(gpioEntry.getStatus());
+                    gpioServer.notifyBlinkDataChanged(gpioEntry.getGpio(), blink);
+                } else {
+                    gpioInput = gpio;
+                    gpio.registerGpioCallback(mGpioCallback);
+                }
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private GpioCallback mGpioCallback = new GpioCallback() {
+        @Override
+        public boolean onGpioEdge(Gpio gpio) {
+            // Read the active high pin state
+            try {
+                if (gpio.getValue()) {
+                    // Pin is HIGH
+                    selfGpioRef.child(gpioLed.getGpioId()).child(GPIO.P_STATUS).setValue(true);
+                } else {
+                    // Pin is LOW
+                    selfGpioRef.child(gpioLed.getGpioId()).child(GPIO.P_STATUS).setValue(false);
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            // Continue listening for more interrupts
+            return true;
+        }
+
+        @Override
+        public void onGpioError(Gpio gpio, int error) {
+            Log.w(TAG, gpio + ": Error event " + error);
+        }
+    };
 
     @Override
     protected void onResume() {
@@ -98,19 +167,15 @@ public class BlinkFirebaseActivity extends Activity {
     }
 
     @Override
+    protected void onStop() {
+        super.onStop();
+        gpioInput.unregisterGpioCallback(mGpioCallback);
+    }
+
+    @Override
     protected void onDestroy() {
         super.onDestroy();
         gpioServer.closeGpio();
     }
-
-    private Runnable mRandomRunnable = new Runnable() {
-        @Override
-        public void run() {
-            blink.setStatus(!blink.isStatus());
-            databaseReference.child("gpio").child(pinName).setValue(blink);
-//            databaseReference.setValue(blink.isStatus());
-            handler.postDelayed(mRandomRunnable, 2000);
-        }
-    };
 
 }

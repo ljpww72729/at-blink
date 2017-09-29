@@ -32,7 +32,7 @@ public class GpioServer {
     }
 
 
-    public Gpio initGpio(String pinName, int direction) {
+    public Gpio initGpio(String pinName) {
         if (service == null) {
             Log.e(TAG, "GpioServer is not created.");
             return null;
@@ -42,7 +42,6 @@ public class GpioServer {
         }
         try {
             Gpio mLedGpio = service.openGpio(pinName);
-            mLedGpio.setDirection(direction);
             gpioArrayMap.put(pinName, mLedGpio);
             Log.i(TAG, "Start blinking LED GPIO pin");
             return mLedGpio;
@@ -51,7 +50,6 @@ public class GpioServer {
         }
         return null;
     }
-
 
     public Gpio getGpid(String pinName) {
         if (gpioArrayMap.get(pinName) != null) {

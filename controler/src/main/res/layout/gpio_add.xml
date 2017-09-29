@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <data>
+
+        <variable
+                name="gpio"
+                type="com.ljpww72729.atblink.data.GPIO"/>
+
+        <import type="com.ljpww72729.atblink.data.GPIO"/>
+    </data>
+
+    <android.support.constraint.ConstraintLayout
+            android:id="@+id/constraint_layout"
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+        <TextView
+                android:text="@string/gpio_id"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="8dp"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintBaseline_toBaselineOf="@+id/gpio_id"
+                android:id="@+id/textView4"
+                android:layout_marginStart="8dp"/>
+
+        <EditText
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:inputType="textPersonName"
+                android:ems="10"
+                android:id="@+id/gpio_id"
+                app:layout_constraintTop_toTopOf="parent"
+                android:layout_marginTop="8dp"
+                android:hint="形如：lp_iot_00001"
+                app:layout_constraintLeft_toRightOf="@+id/textView4"
+                android:layout_marginLeft="8dp"
+                android:text="@={gpio.gpioId}"
+                android:layout_marginRight="8dp"
+                app:layout_constraintRight_toRightOf="parent"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp"/>
+
+        <TextView
+                android:text="@string/gpio_gpio"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/textView5"
+                app:layout_constraintBaseline_toBaselineOf="@+id/gpio"
+                app:layout_constraintRight_toRightOf="@+id/textView4"/>
+
+        <EditText
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:inputType="textPersonName"
+                android:ems="10"
+                android:id="@+id/gpio"
+                android:layout_marginTop="8dp"
+                app:layout_constraintTop_toBottomOf="@+id/gpio_id"
+                android:layout_marginRight="8dp"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintHorizontal_bias="0.0"
+                android:text="@={gpio.gpio}"
+                app:layout_constraintLeft_toLeftOf="@+id/gpio_id"
+                android:layout_marginEnd="8dp"/>
+
+        <TextView
+                android:text="@string/auto_generate"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/auto_generate"
+                android:layout_marginRight="8dp"
+                app:layout_constraintRight_toRightOf="@+id/gpio_id"
+                app:layout_constraintBaseline_toBaselineOf="@+id/gpio_id"
+                android:layout_marginEnd="8dp"/>
+
+        <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/textView"
+                app:layout_constraintBaseline_toBaselineOf="@+id/alias"
+                android:text="@string/gpio_alias"
+                app:layout_constraintRight_toRightOf="@+id/textView5"/>
+
+        <EditText
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:inputType="textPersonName"
+                android:ems="10"
+                android:id="@+id/alias"
+                android:layout_marginTop="4dp"
+                app:layout_constraintTop_toBottomOf="@+id/gpio"
+                android:layout_marginRight="8dp"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintHorizontal_bias="0.0"
+                android:text="@={gpio.alias}"
+                app:layout_constraintLeft_toLeftOf="@+id/gpio"
+                android:layout_marginEnd="8dp"/>
+
+        <TextView
+                android:text="@string/gpio_function"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:layout_constraintBaseline_toBaselineOf="@+id/function"
+                android:id="@+id/textView3"
+                app:layout_constraintRight_toRightOf="@+id/textView"/>
+
+        <EditText
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:inputType="textPersonName"
+                android:ems="10"
+                android:id="@+id/function"
+                android:layout_marginTop="8dp"
+                app:layout_constraintTop_toBottomOf="@+id/alias"
+                android:layout_marginRight="8dp"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintHorizontal_bias="0.0"
+                android:text="@={gpio.function}"
+                app:layout_constraintLeft_toLeftOf="@+id/alias"
+                android:layout_marginEnd="8dp"/>
+
+        <TextView
+                android:text="状态"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/textView6"
+                app:layout_constraintRight_toRightOf="@+id/textView9"
+                android:layout_marginRight="0dp"
+                app:layout_constraintBaseline_toBaselineOf="@+id/status"/>
+
+        <Switch
+                android:text="Switch"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:id="@+id/status"
+                android:checked="@={gpio.status}"
+                android:layout_marginTop="8dp"
+                app:layout_constraintTop_toBottomOf="@+id/edge"
+                app:layout_constraintLeft_toRightOf="@+id/textView6"
+                android:layout_marginLeft="8dp"
+                />
+
+        <TextView
+                android:text="引脚方向"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/textView7"
+                app:layout_constraintRight_toRightOf="@+id/textView3"
+                app:layout_constraintTop_toTopOf="@+id/direction"
+                android:layout_marginTop="4dp"
+                android:layout_marginRight="0dp"/>
+
+        <Spinner
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:id="@+id/direction"
+                android:layout_marginRight="8dp"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintLeft_toRightOf="@+id/textView7"
+                android:layout_marginLeft="8dp"
+                android:layout_marginTop="6dp"
+                app:layout_constraintTop_toBottomOf="@+id/function"
+                app:layout_constraintHorizontal_bias="0.0"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp"
+                android:selectedItemPosition="@={gpio.direction}"
+                android:entries="@array/direction_array"/>
+
+        <TextView
+                android:text="触发电压"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/textView8"
+                app:layout_constraintRight_toRightOf="@+id/textView7"
+                app:layout_constraintTop_toTopOf="@+id/active"
+                android:layout_marginTop="4dp"/>
+
+        <Spinner
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:id="@+id/active"
+                android:layout_marginTop="8dp"
+                app:layout_constraintTop_toBottomOf="@+id/direction"
+                android:layout_marginRight="8dp"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintLeft_toRightOf="@+id/textView8"
+                android:layout_marginLeft="8dp"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp"
+                android:selectedItemPosition="@={gpio.active}"
+                android:entries="@array/active_array"/>
+
+        <TextView
+                android:text="状态监听"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/textView9"
+                app:layout_constraintTop_toTopOf="@+id/edge"
+                android:layout_marginTop="4dp"
+                app:layout_constraintRight_toRightOf="@+id/textView8"
+                android:layout_marginRight="0dp"/>
+
+        <Spinner
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:id="@+id/edge"
+                android:layout_marginRight="8dp"
+                app:layout_constraintRight_toRightOf="parent"
+                android:layout_marginTop="8dp"
+                app:layout_constraintTop_toBottomOf="@+id/active"
+                app:layout_constraintLeft_toRightOf="@+id/textView9"
+                android:layout_marginLeft="8dp"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp"
+                android:selectedItemPosition="@={gpio.edge}"
+                android:entries="@array/edge_array"/>
+
+    </android.support.constraint.ConstraintLayout>
+</layout>

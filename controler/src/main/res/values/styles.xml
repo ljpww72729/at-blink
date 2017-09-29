@@ -28,4 +28,8 @@
         <item name="android:shadowRadius">2</item>
     </style>
 
+    <style name="Lillian.Microphone" parent="ApiAi.Microphone">
+        <item name="android:src">@drawable/lillian_mic_control</item>
+    </style>
+
 </resources>

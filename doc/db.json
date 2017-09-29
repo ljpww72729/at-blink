@@ -1,34 +1,60 @@
 {
+  "deviceType":{
+    "0":"Raspberry"
+  },
   "device": {
     "lp_iot_000": {
-      "dId": "lp_iot_000",
-      "dName": "树莓派iot"
+      "deviceId": "lp_iot_000",
+      "deviceName": "树莓派iot"
     },
     "lp_iot_001": {
-      "dId": "lp_iot_001",
-      "dName": "树莓派iot"
+      "deviceId": "lp_iot_001",
+      "deviceName": "树莓派iot"
     }
   },
   "gpio": {
     "lp_iot_000": {
-      "lp_iot_00003": {
+      "lp_iot_00001": {
+        "gpioId":"lp_iot_00003",
+        "gpio": "BCM2",
+        "alias": "SDA",
         "function": "控制1号LED灯",
-        "status": "1",
-        "emitCheck": "1",
-        "reportCheck": "1"
+        "status": true,
+        "direction": 0,
+        "active": 0,
+        "edge":0
       }
     }
   },
   "pin": {
-    "lp_iot_00003": {
-      "gpio": "BCM2",
-      "alias": "SDA",
-      "function": "控制1号LED灯",
-      "status": "1",
-      "emitStatus": "1",
-      "reportStatus": "1",
-      "emitCheck": "1",
-      "reportCheck": "1"
+    "0":{
+      "01":{
+        "pinId":"01",
+        "gpio": "3v3",
+        "alias": "",
+        "status": false,
+        "direction": 0,
+        "active": 0,
+        "edge":0
+      },
+      "02":{
+        "pinId":"02",
+        "gpio": "5v",
+        "alias": "",
+        "status": false,
+        "direction": 0,
+        "active": 0,
+        "edge":0
+      },
+      "02":{
+        "pinId":"03",
+        "gpio": "BCM2",
+        "alias": "SDA",
+        "status": false,
+        "direction": 0,
+        "active": 0,
+        "edge":0
+      }
     }
   }
 }

@@ -35,6 +35,7 @@ import com.ljpww72729.atblink.data.Blink;
 import com.ljpww72729.atblink.module.BoardDefaults;
 import com.ljpww72729.atblink.module.gpio.GpioServer;
 
+import java.io.IOException;
 import java.util.Random;
 
 /**
@@ -113,14 +114,19 @@ public class LedRGBActivity extends Activity {
         blinkG.setStatus(false);
         gpioServer = new GpioServer();
 
-        gpioServer.initGpio(pinNameR, Gpio.DIRECTION_OUT_INITIALLY_HIGH);
-        gpioServer.notifyBlinkDataChanged(pinNameR, blinkR);
+        try {
+            gpioServer.initGpio(pinNameR).setDirection(Gpio.DIRECTION_OUT_INITIALLY_HIGH);
+            gpioServer.notifyBlinkDataChanged(pinNameR, blinkR);
 
-        gpioServer.initGpio(pinNameB, Gpio.DIRECTION_OUT_INITIALLY_HIGH);
-        gpioServer.notifyBlinkDataChanged(pinNameB, blinkB);
+            gpioServer.initGpio(pinNameB).setDirection(Gpio.DIRECTION_OUT_INITIALLY_HIGH);
+            gpioServer.notifyBlinkDataChanged(pinNameB, blinkB);
 
-        gpioServer.initGpio(pinNameG, Gpio.DIRECTION_OUT_INITIALLY_HIGH);
-        gpioServer.notifyBlinkDataChanged(pinNameG, blinkG);
+            gpioServer.initGpio(pinNameG).setDirection(Gpio.DIRECTION_OUT_INITIALLY_HIGH);
+            gpioServer.notifyBlinkDataChanged(pinNameG, blinkG);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
 
         Intent gattServiceIntent = new Intent(this, GattServerService.class);
         gattServiceIntent.putExtra(GattServerService.CURRENT_BLINK_DATA, blinkR);
