@@ -28,9 +28,11 @@ import com.google.firebase.database.Query;
 import android.app.Activity;
 import android.app.AlarmManager;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 
+import com.ljpww72729.atblink.HttpServerService;
 import com.ljpww72729.atblink.R;
 import com.ljpww72729.atblink.data.Blink;
 import com.ljpww72729.atblink.data.GPIO;
@@ -56,6 +58,7 @@ public class BlinkFirebaseActivity extends Activity {
     //test touch switch
     private GPIO gpioLed;
     private Gpio gpioInput;
+    private Intent httpServerService;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -101,6 +104,10 @@ public class BlinkFirebaseActivity extends Activity {
 
             }
         });
+
+        httpServerService = new Intent(this, HttpServerService.class);
+        httpServerService.putExtra(HttpServerService.REALTIME_DATA_TYPE, HttpServerService.REALTIME_DATA_TYPE_WILD);
+        startService(httpServerService);
     }
 
     private void childBlinkChanged(DataSnapshot dataSnapshot) {
@@ -176,6 +183,9 @@ public class BlinkFirebaseActivity extends Activity {
     protected void onDestroy() {
         super.onDestroy();
         gpioServer.closeGpio();
+        if (httpServerService != null) {
+            stopService(httpServerService);
+        }
     }
 
 }

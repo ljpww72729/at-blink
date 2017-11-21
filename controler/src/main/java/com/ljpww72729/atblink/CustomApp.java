@@ -2,6 +2,9 @@ package com.ljpww72729.atblink;
 
 import android.app.Application;
 
+import com.wilddog.wilddogcore.WilddogApp;
+import com.wilddog.wilddogcore.WilddogOptions;
+
 /**
  * Created by LinkedME06 on 2017/9/7.
  */
@@ -10,6 +13,11 @@ public class CustomApp extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
+
+        // 初始化
+        WilddogOptions options = new WilddogOptions.Builder().setSyncUrl("https://wd8078052585upgyqs.wilddogio.com").build();
+        WilddogApp.initializeApp(this, options);
+
 //        final FirebaseDatabase database = FirebaseDatabase.getInstance();
 //        final DatabaseReference connectionRef = database.getReference(RaspberryIotInfo.CONNECTIONSPATH);
 //        final DatabaseReference lastOnlineRef = database.getReference(RaspberryIotInfo.LASTONLINEPATH);

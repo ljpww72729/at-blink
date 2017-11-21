@@ -46,6 +46,6 @@ android {
 dependencies {
     compile "com.google.firebase:firebase-database:${rootProject.ext.firebaseVersion}"
     provided 'com.google.android.things:androidthings:0.5.1-devpreview'
-    compile 'com.wilddog.client:wilddog-sync-android:2.3.5'
+    compile 'com.wilddog.client:wilddog-sync-android:2.3.7'
 }
 apply plugin: 'com.google.gms.google-services'

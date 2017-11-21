@@ -16,9 +16,26 @@
 
 package com.ljpww72729.atblink.gpio;
 
-import android.app.Activity;
+import com.google.android.things.pio.Gpio;
 
+import android.app.Activity;
+import android.os.Bundle;
+import android.os.Handler;
+import android.util.Log;
+
+import com.ljpww72729.atblink.R;
+import com.ljpww72729.atblink.data.Blink;
 import com.ljpww72729.atblink.module.BoardDefaults;
+import com.ljpww72729.atblink.module.gpio.GpioServer;
+import com.wilddog.client.DataSnapshot;
+import com.wilddog.client.SyncError;
+import com.wilddog.client.SyncReference;
+import com.wilddog.client.ValueEventListener;
+import com.wilddog.client.WilddogSync;
+import com.wilddog.wilddogcore.WilddogApp;
+import com.wilddog.wilddogcore.WilddogOptions;
+
+import java.io.IOException;
 
 /**
  * Sample usage of the Gpio API that blinks an LE.
@@ -27,82 +44,82 @@ import com.ljpww72729.atblink.module.BoardDefaults;
  * The preferred GPIO pin to use on each board is in the {@link BoardDefaults} class.
  */
 public class BlinkWilddogActivity extends Activity {
-//    private static final String TAG = BlinkWilddogActivity.class.getSimpleName();
-//    private GpioServer gpioServer;
-//    // 默认开启状态
-//    private boolean mLedState = true;
-//    String pinName = "BCM6";
-//    Blink blink = new Blink();
-//    private SyncReference databaseReference;
-//    Handler handler = new Handler();
-//
-//    @Override
-//    protected void onCreate(Bundle savedInstanceState) {
-//        super.onCreate(savedInstanceState);
-//        setContentView(R.layout.act_blink);
-//        Log.i(TAG, "Starting BlinkActivity");
-//        blink.setStatus(mLedState);
-//        gpioServer = new GpioServer();
-//
-//        try {
-//            gpioServer.initGpio(pinName).setDirection(Gpio.DIRECTION_OUT_INITIALLY_HIGH);
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-//        gpioServer.notifyBlinkDataChanged(pinName, blink);
-//
-//        WilddogOptions options = new WilddogOptions.Builder().setSyncUrl("https://wd8078052585upgyqs.wilddogio.com").build();
-//        WilddogApp.initializeApp(this, options);
-//        databaseReference = WilddogSync.getInstance().getReference("device");
-//        databaseReference.child("gpio").child(pinName).setValue(blink);
-////        databaseReference.setValue(blink.isStatus());
-//        // Read from the database
-//        databaseReference.addValueEventListener(new ValueEventListener() {
-//            @Override
-//            public void onDataChange(DataSnapshot dataSnapshot) {
-//                // This method is called once with the initial value and again
-//                // whenever data at this location is updated.
-//                Blink value = (Blink) dataSnapshot.child("gpio").child(pinName).getValue(Blink.class);
-////                blink.setStatus((Boolean) dataSnapshot.getValue());
-//                gpioServer.notifyBlinkDataChanged(pinName, value);
-//                Log.i(TAG, "Value is: " + value.isStatus());
-//            }
-//
-//            @Override
-//            public void onCancelled(SyncError syncError) {
-//
-//            }
-//
-//        });
-//
-//        handler.post(mRandomRunnable);
-//
-//    }
-//
-//    @Override
-//    protected void onResume() {
-//        super.onResume();
-//    }
-//
-//    @Override
-//    protected void onPause() {
-//        super.onPause();
-//    }
-//
-//    @Override
-//    protected void onDestroy() {
-//        super.onDestroy();
-//        gpioServer.closeGpio();
-//    }
-//
-//    private Runnable mRandomRunnable = new Runnable() {
-//        @Override
-//        public void run() {
-//            blink.setStatus(!blink.isStatus());
-//            databaseReference.child("gpio").child(pinName).setValue(blink);
-////            databaseReference.setValue(blink.isStatus());
-//            handler.postDelayed(mRandomRunnable, 2000);
-//        }
-//    };
+    private static final String TAG = BlinkWilddogActivity.class.getSimpleName();
+    private GpioServer gpioServer;
+    // 默认开启状态
+    private boolean mLedState = true;
+    String pinName = "BCM6";
+    Blink blink = new Blink();
+    private SyncReference databaseReference;
+    Handler handler = new Handler();
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.act_blink);
+        Log.i(TAG, "Starting BlinkActivity");
+        blink.setStatus(mLedState);
+        gpioServer = new GpioServer();
+
+        try {
+            gpioServer.initGpio(pinName).setDirection(Gpio.DIRECTION_OUT_INITIALLY_HIGH);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        gpioServer.notifyBlinkDataChanged(pinName, blink);
+
+        WilddogOptions options = new WilddogOptions.Builder().setSyncUrl("https://wd8078052585upgyqs.wilddogio.com").build();
+        WilddogApp.initializeApp(this, options);
+        databaseReference = WilddogSync.getInstance().getReference("device");
+        databaseReference.child("gpio").child(pinName).setValue(blink);
+//        databaseReference.setValue(blink.isStatus());
+        // Read from the database
+        databaseReference.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                // This method is called once with the initial value and again
+                // whenever data at this location is updated.
+                Blink value = (Blink) dataSnapshot.child("gpio").child(pinName).getValue(Blink.class);
+//                blink.setStatus((Boolean) dataSnapshot.getValue());
+                gpioServer.notifyBlinkDataChanged(pinName, value);
+                Log.i(TAG, "Value is: " + value.isStatus());
+            }
+
+            @Override
+            public void onCancelled(SyncError syncError) {
+
+            }
+
+        });
+
+        handler.post(mRandomRunnable);
+
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        gpioServer.closeGpio();
+    }
+
+    private Runnable mRandomRunnable = new Runnable() {
+        @Override
+        public void run() {
+            blink.setStatus(!blink.isStatus());
+            databaseReference.child("gpio").child(pinName).setValue(blink);
+//            databaseReference.setValue(blink.isStatus());
+            handler.postDelayed(mRandomRunnable, 2000);
+        }
+    };
 
 }

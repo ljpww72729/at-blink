@@ -47,6 +47,8 @@
         <service
                 android:name=".GattServerService"
                 android:enabled="true"/>
+        <service android:name=".HttpServerService"/>
+
         <receiver android:name="com.wilddog.client.receiver.WilddogAuthCastReceiver">
             <intent-filter>
                 <action android:name="com.wilddog.wilddogauth.signinsuccess"/>

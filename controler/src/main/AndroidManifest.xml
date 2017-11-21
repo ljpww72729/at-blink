@@ -73,6 +73,14 @@
                 android:name=".firebase.DeviceListActivity"
                 android:screenOrientation="portrait"
                 android:parentActivityName=".MainActivity"/>
+
+        <receiver android:name="com.wilddog.client.receiver.WilddogAuthCastReceiver">
+            <intent-filter>
+                <action android:name="com.wilddog.wilddogauth.signinsuccess"/>
+                <action android:name="com.wilddog.wilddogauth.signoutsuccess"/>
+            </intent-filter>
+        </receiver>
+
     </application>
 
 </manifest>

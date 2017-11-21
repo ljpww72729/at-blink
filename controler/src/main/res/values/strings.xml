@@ -38,6 +38,7 @@
     <string name="device_id">设备编号</string>
     <string name="device_name">设备名称</string>
     <string name="notNull">不能为空</string>
+    <string name="at_least_one">至少填写一个</string>
     <string name="device_add">添加设备</string>
     <string name="gpio_add">添加GPIO引脚</string>
     <string name="device_update">更新设备</string>
@@ -61,6 +62,10 @@
     <string name="last_on_line">上次在线时间：%1$s</string>
     <string name="online">在线</string>
     <string name="offline">离线</string>
+    <string name="firebase_realtime_database">FireBase实时通信引擎</string>
+    <string name="realtime_address">引擎地址</string>
+    <string name="wilddog_realtime_database">野狗实时通信引擎</string>
+    <string name="database_alert">注：\n引擎地址不包含\"https://\"及\"/\"！\n示例:example.firebaseio.com</string>
 
     <string-array name="direction_array">
         <item>DIRECTION_IN</item>

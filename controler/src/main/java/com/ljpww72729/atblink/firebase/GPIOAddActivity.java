@@ -3,7 +3,6 @@ package com.ljpww72729.atblink.firebase;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 import android.content.Context;
@@ -25,6 +24,8 @@ import com.ljpww72729.atblink.data.Device;
 import com.ljpww72729.atblink.data.GPIO;
 import com.ljpww72729.atblink.data.RaspberryIotInfo;
 import com.ljpww72729.atblink.databinding.GpioAddBinding;
+import com.wilddog.client.SyncError;
+import com.wilddog.client.SyncReference;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -38,8 +39,8 @@ import java.util.regex.Pattern;
 
 public class GPIOAddActivity extends FirebaseBaseActivity {
 
-    DatabaseReference databaseRef;
-    DatabaseReference gpioDeviceRef;
+    DatabaseReference gpioDeviceFireRef;
+    SyncReference gpioDeviceWildRef;
     GpioAddBinding binding;
     GPIO gpio;
     private String operate = RaspberryIotInfo.ADD;
@@ -74,43 +75,72 @@ public class GPIOAddActivity extends FirebaseBaseActivity {
                     break;
             }
         }
-        databaseRef = FirebaseDatabase.getInstance().getReference();
-        gpioDeviceRef = databaseRef.child(RaspberryIotInfo.GPIO).child(deviceId);
+        if (isFirebaseAddress) {
+            gpioDeviceFireRef = databaseFireRef.child(RaspberryIotInfo.GPIO).child(deviceId);
+        } else {
+            gpioDeviceWildRef = databaseWildRef.child(RaspberryIotInfo.GPIO).child(deviceId);
+        }
         binding.setGpio(gpio);
         binding.autoGenerate.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 // 查询线上设备id，自动+1作为新的设备id
-                gpioDeviceRef.orderByChild(Device.P_DID).limitToLast(1).addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(DataSnapshot dataSnapshot) {
-                        String lastGpioId = "";
-                        for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
-                            lastGpioId = snapshot.getKey();
+                if (isFirebaseAddress) {
+                    gpioDeviceFireRef.orderByChild(Device.P_DID).limitToLast(1).addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot dataSnapshot) {
+                            String lastGpioId = "";
+                            for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                                lastGpioId = snapshot.getKey();
+                            }
+                            autoGenerate(lastGpioId);
                         }
-                        String prefixIdStr = deviceId;
-                        String suffixIdStr = "00";
-                        Pattern pattern = Pattern.compile(".*\\D+(?=(\\d+$))");
-                        Matcher matcher = pattern.matcher(lastGpioId);
-                        if (matcher.find()) {
-                            prefixIdStr = matcher.group(0);
-                            suffixIdStr = matcher.group(1);
-                        }
-                        String gpioIdSuffix = String.valueOf(Integer.valueOf(suffixIdStr) + 1);
-                        if (gpioIdSuffix.length() < suffixIdStr.length()) {
-                            gpioIdSuffix = suffixIdStr.substring(0, suffixIdStr.length() - gpioIdSuffix.length()) + gpioIdSuffix;
-                        }
-                        String deviceId = prefixIdStr + gpioIdSuffix;
-                        gpio.setGpioId(deviceId);
-                    }
 
-                    @Override
-                    public void onCancelled(DatabaseError databaseError) {
+                        @Override
+                        public void onCancelled(DatabaseError databaseError) {
 
-                    }
-                });
+                        }
+                    });
+                } else {
+                    gpioDeviceWildRef.orderByChild(Device.P_DID).limitToLast(1).addListenerForSingleValueEvent(new com.wilddog.client.ValueEventListener() {
+                        @Override
+                        public void onDataChange(com.wilddog.client.DataSnapshot dataSnapshot) {
+                            String lastGpioId = "";
+                            if (dataSnapshot.getChildrenCount() > 0) {
+                                com.wilddog.client.DataSnapshot dataSnapshotChildren = (com.wilddog.client.DataSnapshot) dataSnapshot.getChildren().iterator().next();
+                                lastGpioId = dataSnapshotChildren.getKey();
+                            }
+                            autoGenerate(lastGpioId);
+                        }
+
+                        @Override
+                        public void onCancelled(SyncError databaseError) {
+
+                        }
+                    });
+                }
             }
         });
+    }
+
+    /**
+     * 自动生成 gpio id
+     */
+    private void autoGenerate(String lastGpioId) {
+        String prefixIdStr = deviceId;
+        String suffixIdStr = "00";
+        Pattern pattern = Pattern.compile(".*\\D+(?=(\\d+$))");
+        Matcher matcher = pattern.matcher(lastGpioId);
+        if (matcher.find()) {
+            prefixIdStr = matcher.group(0);
+            suffixIdStr = matcher.group(1);
+        }
+        String gpioIdSuffix = String.valueOf(Integer.valueOf(suffixIdStr) + 1);
+        if (gpioIdSuffix.length() < suffixIdStr.length()) {
+            gpioIdSuffix = suffixIdStr.substring(0, suffixIdStr.length() - gpioIdSuffix.length()) + gpioIdSuffix;
+        }
+        String deviceId = prefixIdStr + gpioIdSuffix;
+        gpio.setGpioId(deviceId);
     }
 
     private void changeEditEnable(boolean enable) {
@@ -161,20 +191,40 @@ public class GPIOAddActivity extends FirebaseBaseActivity {
                 }
                 Map<String, Object> gpioValues = gpio.toMap();
                 Map<String, Object> childUpdates = new HashMap<>();
-                childUpdates.put(gpioDeviceRef.zzbpk().toString() + "/" + gpio.getGpioId(), gpioValues);
-                databaseRef.updateChildren(childUpdates, new DatabaseReference.CompletionListener() {
-                    @Override
-                    public void onComplete(DatabaseError databaseError, DatabaseReference databaseReference) {
-                        if (databaseError == null) {
-                            Snackbar.make(findViewById(R.id.constraint_layout), R.string.operate_succeed, Snackbar.LENGTH_SHORT).show();
-                            finish();
-                        } else {
-                            Snackbar.make(findViewById(R.id.constraint_layout),
-                                    getString(R.string.operate_failed_msg, databaseError.getMessage()),
-                                    Snackbar.LENGTH_SHORT).show();
+                if (isFirebaseAddress) {
+                    // zzbpw()获取gpioDeviceFireRef引用路径
+                    childUpdates.put(gpioDeviceFireRef.zzbpw().toString() + "/" + gpio.getGpioId(), gpioValues);
+                    childUpdates.put("/" + RaspberryIotInfo.DEVICE + "/" + deviceId + "/changed", 1);
+                    databaseFireRef.updateChildren(childUpdates, new DatabaseReference.CompletionListener() {
+                        @Override
+                        public void onComplete(DatabaseError databaseError, DatabaseReference databaseReference) {
+                            if (databaseError == null) {
+                                Snackbar.make(findViewById(R.id.constraint_layout), R.string.operate_succeed, Snackbar.LENGTH_SHORT).show();
+                                finish();
+                            } else {
+                                Snackbar.make(findViewById(R.id.constraint_layout),
+                                        getString(R.string.operate_failed_msg, databaseError.getMessage()),
+                                        Snackbar.LENGTH_SHORT).show();
+                            }
                         }
-                    }
-                });
+                    });
+                } else {
+                    childUpdates.put(gpioDeviceWildRef.getPath().toString() + "/" + gpio.getGpioId(), gpioValues);
+                    childUpdates.put("/" + RaspberryIotInfo.DEVICE + "/" + deviceId + "/changed", 1);
+                    databaseWildRef.updateChildren(childUpdates, new SyncReference.CompletionListener() {
+                        @Override
+                        public void onComplete(SyncError databaseError, SyncReference databaseReference) {
+                            if (databaseError == null) {
+                                Snackbar.make(findViewById(R.id.constraint_layout), R.string.operate_succeed, Snackbar.LENGTH_SHORT).show();
+                                finish();
+                            } else {
+                                Snackbar.make(findViewById(R.id.constraint_layout),
+                                        getString(R.string.operate_failed_msg, databaseError.getMessage()),
+                                        Snackbar.LENGTH_SHORT).show();
+                            }
+                        }
+                    });
+                }
                 return true;
             case R.id.clear:
                 gpio.clearProperties();

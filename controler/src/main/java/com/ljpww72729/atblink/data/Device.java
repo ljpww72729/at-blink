@@ -28,6 +28,29 @@ public class Device extends BaseObservable implements Parcelable {
     private String deviceName;
     private long lastOnline;
     private boolean connections;
+    private boolean reset = false;
+    private int changed = 0;
+
+    @Bindable
+    public boolean isReset() {
+        return reset;
+    }
+
+    public void setReset(boolean reset) {
+        this.reset = reset;
+        notifyPropertyChanged(BR.reset);
+    }
+
+    @Bindable
+    public int getChanged() {
+        return changed;
+    }
+
+    public void setChanged(int changed) {
+        this.changed = changed;
+        notifyPropertyChanged(BR.changed);
+    }
+
 
     public long getLastOnline() {
         return lastOnline;
@@ -71,16 +94,21 @@ public class Device extends BaseObservable implements Parcelable {
 
     /**
      * 判断用户是否填写了信息
+     *
+     * @return true:填写了信息 false:均未填写
      */
     @Exclude
     public boolean objectIsEmpty() {
-        return TextUtils.isEmpty(deviceId) && TextUtils.isEmpty(deviceName);
+        return TextUtils.isEmpty(deviceId) &&
+                TextUtils.isEmpty(deviceName);
     }
 
     @Exclude
     public void clearProperties() {
         setDeviceId("");
         setDeviceName("");
+        setChanged(0);
+        setReset(false);
     }
 
     @Exclude
@@ -88,6 +116,8 @@ public class Device extends BaseObservable implements Parcelable {
         HashMap<String, Object> result = new HashMap<>();
         result.put("deviceId", deviceId);
         result.put("deviceName", deviceName);
+        result.put("reset", reset);
+        result.put("changed", changed);
         return result;
     }
 
@@ -102,6 +132,8 @@ public class Device extends BaseObservable implements Parcelable {
         dest.writeString(this.deviceName);
         dest.writeLong(this.lastOnline);
         dest.writeByte(this.connections ? (byte) 1 : (byte) 0);
+        dest.writeByte(this.reset ? (byte) 1 : (byte) 0);
+        dest.writeInt(this.changed);
     }
 
     protected Device(Parcel in) {
@@ -109,6 +141,8 @@ public class Device extends BaseObservable implements Parcelable {
         this.deviceName = in.readString();
         this.lastOnline = in.readLong();
         this.connections = in.readByte() != 0;
+        this.reset = in.readByte() != 0;
+        this.changed = in.readInt();
     }
 
     public static final Creator<Device> CREATOR = new Creator<Device>() {

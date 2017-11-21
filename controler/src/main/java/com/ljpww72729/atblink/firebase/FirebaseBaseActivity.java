@@ -16,6 +16,11 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.ljpww72729.atblink.R;
+import com.ljpww72729.atblink.data.Constants;
+import com.ljpww72729.atblink.utils.SPUtils;
+import com.wilddog.client.SyncError;
+import com.wilddog.client.SyncReference;
+import com.wilddog.client.WilddogSync;
 
 /**
  * Created by LinkedME06 on 2017/9/7.
@@ -23,32 +28,61 @@ import com.ljpww72729.atblink.R;
 
 public class FirebaseBaseActivity extends AppCompatActivity {
 
+    public boolean isFirebaseAddress = true;
+    public DatabaseReference databaseFireRef;
+    public SyncReference databaseWildRef;
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
+        isFirebaseAddress = SPUtils.getInt(this, Constants.SP_FILE, Constants.DATABASE_ADDRESS, Constants.DATABASE_FIREBASE) == Constants.DATABASE_FIREBASE;
+//        isFirebaseAddress = false;
         // TODO: 2017/9/7 lipeng 这里可不可以精简呢？？？
-        DatabaseReference connectedRef = FirebaseDatabase.getInstance().getReference(".info/connected");
-        connectedRef.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot snapshot) {
-                boolean connected = snapshot.getValue(Boolean.class);
-                if (connected) {
-                    showFirebaseConnectedStatus(true);
-                } else {
-                    showFirebaseConnectedStatus(false);
+        if (isFirebaseAddress) {
+            databaseFireRef = FirebaseDatabase.getInstance().getReference();
+            DatabaseReference connectedRef = FirebaseDatabase.getInstance().getReference(".info/connected");
+            connectedRef.addValueEventListener(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot snapshot) {
+                    boolean connected = snapshot.getValue(Boolean.class);
+                    if (connected) {
+                        showFirebaseConnectedStatus(true);
+                    } else {
+                        showFirebaseConnectedStatus(false);
+                    }
                 }
-            }
 
-            @Override
-            public void onCancelled(DatabaseError error) {
-                System.err.println("Listener was cancelled");
-            }
-        });
+                @Override
+                public void onCancelled(DatabaseError error) {
+                    System.err.println("Listener was cancelled");
+                }
+            });
+        } else {
+            databaseWildRef = WilddogSync.getInstance().getReference();
+            SyncReference connectedRef = WilddogSync.getInstance().getReference(".info/connected");
+            connectedRef.addValueEventListener(new com.wilddog.client.ValueEventListener() {
+                @Override
+                public void onDataChange(com.wilddog.client.DataSnapshot snapshot) {
+                    boolean connected = (boolean) snapshot.getValue(Boolean.class);
+                    if (connected) {
+                        showFirebaseConnectedStatus(true);
+                    } else {
+                        showFirebaseConnectedStatus(false);
+                    }
+                }
+
+                @Override
+                public void onCancelled(SyncError error) {
+                    System.err.println("Listener was cancelled");
+                }
+            });
+        }
+
     }
 
     /**
      * 本地离线则不可更改数据
+     *
      * @param connected 状态
      */
     private void showFirebaseConnectedStatus(boolean connected) {

@@ -10,8 +10,10 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 
+import com.ljpww72729.atblink.data.Constants;
 import com.ljpww72729.atblink.databinding.ActivityMainBinding;
 import com.ljpww72729.atblink.firebase.DeviceListActivity;
+import com.ljpww72729.atblink.utils.SPUtils;
 
 import ai.api.android.AIConfiguration;
 import ai.api.model.AIError;
@@ -37,6 +39,14 @@ public class MainActivity extends AppCompatActivity {
         binding.realtime.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                SPUtils.putInt(MainActivity.this, Constants.SP_FILE, Constants.DATABASE_ADDRESS, Constants.DATABASE_FIREBASE);
+                DeviceListActivity.start(MainActivity.this, null);
+            }
+        });
+        binding.wildDogRealtime.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                SPUtils.putInt(MainActivity.this, Constants.SP_FILE, Constants.DATABASE_ADDRESS, Constants.DATABASE_WILDDOG);
                 DeviceListActivity.start(MainActivity.this, null);
             }
         });

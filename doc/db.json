@@ -3,13 +3,13 @@
     "0":"Raspberry"
   },
   "device": {
-    "lp_iot_000": {
-      "deviceId": "lp_iot_000",
-      "deviceName": "树莓派iot"
-    },
     "lp_iot_001": {
       "deviceId": "lp_iot_001",
-      "deviceName": "树莓派iot"
+      "deviceName": "树莓派iot",
+      "lastOnline": "最后一次在线时间",
+      "connections": true,
+      "firebaseAddress": "firebase地址",
+      "wilddogAddress": "wilddog地址"
     }
   },
   "gpio": {

@@ -13,7 +13,7 @@ public class RaspberryIotInfo {
 
     public static final String DEVICE = "device";
 
-    public static final String DID = "lp_iot_000";
+    public static final String DID = "lp_iot";
 
     public static final String GPIO = "gpio";
 

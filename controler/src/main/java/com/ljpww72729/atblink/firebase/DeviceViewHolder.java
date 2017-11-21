@@ -44,7 +44,8 @@ public class DeviceViewHolder extends RecyclerView.ViewHolder {
             connections.setText(context.getString(R.string.offline));
             connections.setTextColor(Color.RED);
         }
-        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy/MM/dd hh:mm", Locale.CHINESE);
+        // HH:mm是24小时制 hh:mm是12小时制
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm", Locale.ENGLISH);
         String lastOnlineTime = simpleDateFormat.format(new Date(device.getLastOnline()));
         last_on_line.setText(context.getString(R.string.last_on_line, lastOnlineTime));
     }

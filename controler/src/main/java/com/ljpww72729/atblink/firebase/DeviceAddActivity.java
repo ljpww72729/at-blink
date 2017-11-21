@@ -3,7 +3,6 @@ package com.ljpww72729.atblink.firebase;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 import android.content.Context;
@@ -24,6 +23,8 @@ import com.ljpww72729.atblink.R;
 import com.ljpww72729.atblink.data.Device;
 import com.ljpww72729.atblink.data.RaspberryIotInfo;
 import com.ljpww72729.atblink.databinding.DeviceAddBinding;
+import com.wilddog.client.SyncError;
+import com.wilddog.client.SyncReference;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -34,7 +35,8 @@ import java.util.regex.Pattern;
 
 public class DeviceAddActivity extends FirebaseBaseActivity {
 
-    DatabaseReference deviceRef;
+    DatabaseReference deviceFireRef;
+    SyncReference deviceWildRef;
     DeviceAddBinding binding;
     Device device;
     private boolean updateDevice = false;
@@ -44,8 +46,11 @@ public class DeviceAddActivity extends FirebaseBaseActivity {
         super.onCreate(savedInstanceState);
         binding = DataBindingUtil.setContentView(this, R.layout.device_add);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        deviceRef = FirebaseDatabase.getInstance().getReference()
-                .child(RaspberryIotInfo.DEVICE);
+        if (isFirebaseAddress) {
+            deviceFireRef = databaseFireRef.child(RaspberryIotInfo.DEVICE);
+        } else {
+            deviceWildRef = databaseWildRef.child(RaspberryIotInfo.DEVICE);
+        }
         Bundle bundle = getIntent().getExtras();
         if (bundle != null) {
             updateDevice = true;
@@ -61,37 +66,64 @@ public class DeviceAddActivity extends FirebaseBaseActivity {
         binding.autoGenerate.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                // 查询线上设备id，自动+1作为新的设备id
-                deviceRef.orderByChild(Device.P_DID).limitToLast(1).addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(DataSnapshot dataSnapshot) {
-                        String lastDeviceId = "";
-                        for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
-                            lastDeviceId = snapshot.getKey();
+                if (isFirebaseAddress) {
+                    // 查询线上设备id，自动+1作为新的设备id
+                    deviceFireRef.orderByChild(Device.P_DID).limitToLast(1).addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot dataSnapshot) {
+                            String lastDeviceId = "";
+                            for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                                lastDeviceId = snapshot.getKey();
+                            }
+                            autoGenerate(lastDeviceId);
                         }
-                        String prefixIdStr = "lp_iot_";
-                        String suffixIdStr = "000";
-                        Pattern pattern = Pattern.compile(".*\\D+(?=(\\d+$))");
-                        Matcher matcher = pattern.matcher(lastDeviceId);
-                        if (matcher.find()) {
-                            prefixIdStr = matcher.group(0);
-                            suffixIdStr = matcher.group(1);
-                        }
-                        String deviceIdSuffix = String.valueOf(Integer.valueOf(suffixIdStr) + 1);
-                        if (deviceIdSuffix.length() < suffixIdStr.length()) {
-                            deviceIdSuffix = suffixIdStr.substring(0, suffixIdStr.length() - deviceIdSuffix.length()) + deviceIdSuffix;
-                        }
-                        String deviceId = prefixIdStr + deviceIdSuffix;
-                        device.setDeviceId(deviceId);
-                    }
 
-                    @Override
-                    public void onCancelled(DatabaseError databaseError) {
+                        @Override
+                        public void onCancelled(DatabaseError databaseError) {
 
-                    }
-                });
+                        }
+                    });
+                } else {
+                    deviceWildRef.orderByChild(Device.P_DID).limitToLast(1).addListenerForSingleValueEvent(new com.wilddog.client.ValueEventListener() {
+                        @Override
+                        public void onDataChange(com.wilddog.client.DataSnapshot dataSnapshot) {
+                            String lastDeviceId = "";
+                            if (dataSnapshot.getChildrenCount() > 0) {
+                                com.wilddog.client.DataSnapshot dataSnapshotChildren = (com.wilddog.client.DataSnapshot) dataSnapshot.getChildren().iterator().next();
+                                lastDeviceId = dataSnapshotChildren.getKey();
+                            }
+                            autoGenerate(lastDeviceId);
+                        }
+
+                        @Override
+                        public void onCancelled(SyncError databaseError) {
+
+                        }
+                    });
+                }
             }
         });
+    }
+
+    /**
+     * 自动生成device id
+     * @param lastDeviceId
+     */
+    private void autoGenerate(String lastDeviceId) {
+        String prefixIdStr = "lp_iot_";
+        String suffixIdStr = "000";
+        Pattern pattern = Pattern.compile(".*\\D+(?=(\\d+$))");
+        Matcher matcher = pattern.matcher(lastDeviceId);
+        if (matcher.find()) {
+            prefixIdStr = matcher.group(0);
+            suffixIdStr = matcher.group(1);
+        }
+        String deviceIdSuffix = String.valueOf(Integer.valueOf(suffixIdStr) + 1);
+        if (deviceIdSuffix.length() < suffixIdStr.length()) {
+            deviceIdSuffix = suffixIdStr.substring(0, suffixIdStr.length() - deviceIdSuffix.length()) + deviceIdSuffix;
+        }
+        String deviceId = prefixIdStr + deviceIdSuffix;
+        device.setDeviceId(deviceId);
     }
 
     @Override
@@ -127,7 +159,12 @@ public class DeviceAddActivity extends FirebaseBaseActivity {
                             Snackbar.LENGTH_SHORT).show();
                     return false;
                 }
-                deviceRef.child(device.getDeviceId()).setValue(device);
+                if (isFirebaseAddress) {
+                    deviceFireRef.child(device.getDeviceId()).setValue(device);
+                }else {
+                    deviceWildRef.child(device.getDeviceId()).setValue(device);
+                }
+
                 finish();
                 return true;
             case R.id.clear:

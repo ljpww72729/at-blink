@@ -1,1 +1,1 @@
-include ':app', ':controler'
+include ':app', ':controler', ':wilddogdatabase'
