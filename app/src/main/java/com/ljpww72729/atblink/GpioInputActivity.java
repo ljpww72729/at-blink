@@ -8,6 +8,9 @@ import android.app.Activity;
 import android.os.Bundle;
 import android.util.Log;
 
+import com.ljpww72729.atblink.gpio.BlinkActivity;
+import com.ljpww72729.atblink.module.BoardDefaults;
+
 import java.io.IOException;
 
 /**
@@ -30,9 +33,9 @@ public class GpioInputActivity extends Activity {
             mLedGpio.setDirection(Gpio.DIRECTION_IN);
             mLedGpio.setEdgeTriggerType(Gpio.EDGE_BOTH);
             mLedGpio.registerGpioCallback(gpioCallback);
-            Log.i(TAG, "Start blinking LED GPIO pin");
+            Log.i(TAG, "Start blinking LED GPIOModule pin");
 
-            // Post a Runnable that continuously switch the state of the GPIO, blinking the
+            // Post a Runnable that continuously switch the state of the GPIOModule, blinking the
             // corresponding LED
         } catch (IOException e) {
             Log.e(TAG, "Error on PeripheralIO API", e);
@@ -60,7 +63,7 @@ public class GpioInputActivity extends Activity {
     protected void onDestroy() {
         super.onDestroy();
         // Close the Gpio pin.
-        Log.i(TAG, "Closing LED GPIO pin");
+        Log.i(TAG, "Closing LED GPIOModule pin");
         try {
             mLedGpio.unregisterGpioCallback(gpioCallback);
             mLedGpio.close();

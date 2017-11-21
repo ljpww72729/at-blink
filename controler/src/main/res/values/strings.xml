@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright (C) 2013 The Android Open Source Project
+
+     Licensed under the Apache License, Version 2.0 (the "License");
+     you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
+
+          http://www.apache.org/licenses/LICENSE-2.0
+
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+     limitations under the License.
+-->
+<resources>
+    <string name="app_name">Blink控制器</string>
+    <string name="ble_not_supported">BLE is not supported</string>
+    <string name="label_data">Data:</string>
+    <string name="label_device_address">Device address:</string>
+    <string name="label_state">State:</string>
+    <string name="no_data">No data</string>
+    <string name="connected">Connected</string>
+    <string name="disconnected">Disconnected</string>
+    <string name="title_devices">Blink设备扫描</string>
+    <string name="error_bluetooth_not_supported">Bluetooth not supported.</string>
+
+    <string name="unknown_device">未知设备</string>
+    <string name="unknown_characteristic">Unknown characteristic</string>
+    <string name="unknown_service">Unknown service</string>
+
+    <!-- Menu items -->
+    <string name="menu_connect">Connect</string>
+    <string name="menu_disconnect">Disconnect</string>
+    <string name="menu_scan">Scan</string>
+    <string name="menu_stop">Stop</string>
+
+    <string name="device_id">设备编号</string>
+    <string name="device_name">设备名称</string>
+    <string name="notNull">不能为空</string>
+    <string name="at_least_one">至少填写一个</string>
+    <string name="device_add">添加设备</string>
+    <string name="gpio_add">添加GPIO引脚</string>
+    <string name="device_update">更新设备</string>
+    <string name="gpio_update">更新GPIO引脚</string>
+    <string name="gpio_query">GPIO引脚详情</string>
+    <string name="exit_alert_info">有编辑内容未保存，确定舍弃？</string>
+    <string name="ok">确定</string>
+    <string name="cancel">取消</string>
+    <string name="delete_ok">删除成功</string>
+    <string name="undo">UNDO</string>
+    <string name="auto_generate">自动编号</string>
+    <string name="gpio_id">GPIO编号</string>
+    <string name="gpio_gpio">GPIO号</string>
+    <string name="gpio_alias">附加号</string>
+    <string name="gpio_function">功能简介</string>
+    <string name="gpio_list_title">GPIO引脚</string>
+    <string name="operate_succeed">操作成功</string>
+    <string name="operate_failed">操作失败</string>
+    <string name="operate_failed_msg">操作失败，原因：%1$s</string>
+    <string name="no_connected">未链接到网络，不可操作！</string>
+    <string name="last_on_line">上次在线时间：%1$s</string>
+    <string name="online">在线</string>
+    <string name="offline">离线</string>
+    <string name="firebase_realtime_database">FireBase实时通信引擎</string>
+    <string name="realtime_address">引擎地址</string>
+    <string name="wilddog_realtime_database">野狗实时通信引擎</string>
+    <string name="database_alert">注：\n引擎地址不包含\"https://\"及\"/\"！\n示例:example.firebaseio.com</string>
+
+    <string-array name="direction_array">
+        <item>DIRECTION_IN</item>
+        <item>DIRECTION_OUT_INITIALLY_HIGH</item>
+        <item>DIRECTION_OUT_INITIALLY_LOW</item>
+    </string-array>
+    <string-array name="active_array">
+        <item>ACTIVE_LOW</item>
+        <item>ACTIVE_HIGH</item>
+    </string-array>
+    <string-array name="edge_array">
+        <item>EDGE_NONE</item>
+        <item>EDGE_RISING</item>
+        <item>EDGE_FALLING</item>
+        <item>EDGE_BOTH</item>
+    </string-array>
+
+</resources>

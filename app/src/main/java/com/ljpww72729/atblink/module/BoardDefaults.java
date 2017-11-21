@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.ljpww72729.atblink;
+package com.ljpww72729.atblink.module;
 
 import com.google.android.things.pio.PeripheralManagerService;
 
@@ -34,9 +34,9 @@ public class BoardDefaults {
     private static String sBoardVariant = "";
 
     /**
-     * Return the GPIO pin that the LED is connected on.
+     * Return the GPIOModule pin that the LED is connected on.
      * For example, on Intel Edison Arduino breakout, pin "IO13" is connected to an onboard LED
-     * that turns on when the GPIO pin is HIGH, and off when low.
+     * that turns on when the GPIOModule pin is HIGH, and off when low.
      */
     public static String getGPIOForLED() {
         switch (getBoardVariant()) {
@@ -47,7 +47,7 @@ public class BoardDefaults {
             case DEVICE_JOULE:
                 return "J6_25";
             case DEVICE_RPI3:
-                return "BCM6";
+                return "BCM17";
             case DEVICE_IMX6UL_PICO:
                 return "GPIO4_IO20";
             case DEVICE_IMX6UL_VVDN:

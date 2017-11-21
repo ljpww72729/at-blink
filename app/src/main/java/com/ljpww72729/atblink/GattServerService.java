@@ -1,25 +1,6 @@
-/*
- * Copyright 2016, The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package com.ljpww72729.atblink;
 
-import com.google.android.things.pio.Gpio;
-import com.google.android.things.pio.PeripheralManagerService;
-
-import android.app.Activity;
+import android.app.Service;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
@@ -38,67 +19,103 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
-import android.os.Bundle;
-import android.os.Handler;
+import android.os.Binder;
+import android.os.IBinder;
 import android.os.ParcelUuid;
 import android.util.Log;
 
-import java.io.IOException;
+import com.ljpww72729.atblink.data.Blink;
+
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
-/**
- * Sample usage of the Gpio API that blinks an LED at a fixed interval defined in
- * {@link #INTERVAL_BETWEEN_BLINKS_MS}.
- *
- * Some boards, like Intel Edison, have onboard LEDs linked to specific GPIO pins.
- * The preferred GPIO pin to use on each board is in the {@link BoardDefaults} class.
- */
-public class BlinkActivity extends Activity {
-    private static final String TAG = BlinkActivity.class.getSimpleName();
-    private static final int INTERVAL_BETWEEN_BLINKS_MS = 1000;
+import static android.content.ContentValues.TAG;
 
-    private Handler mHandler = new Handler();
-    private Gpio mLedGpio;
-    private boolean mLedState = true;
+/**
+ * Created by LinkedME06 on 19/08/2017.
+ */
+
+public class GattServerService extends Service {
+
+    public static final String CURRENT_BLINK_DATA = "current_blink_data";
+
+    // 蓝牙服务
     private BluetoothManager mBluetoothManager;
+    // 蓝牙广告
     private BluetoothLeAdvertiser mBluetoothLeAdvertiser;
     private BluetoothGattServer mBluetoothGattServer;
     /* Collection of notification subscribers */
     private Set<BluetoothDevice> mRegisteredDevices = new HashSet<>();
+    private BluetoothAdapter bluetoothAdapter;
+    // 当前Bink状态数据
+    private Blink blink = new Blink();
+
+
+    // 广播Action
+    public final static String ACTION_GATT_CONNECTED =
+            "com.ljpww72729.atblink.ACTION_GATT_CONNECTED";
+    public final static String ACTION_GATT_DISCONNECTED =
+            "com.ljpww72729.atblink.ACTION_GATT_DISCONNECTED";
+    public final static String ACTION_GATT_SERVICES_DISCOVERED =
+            "com.ljpww72729.atblink.ACTION_GATT_SERVICES_DISCOVERED";
+    public final static String ACTION_DATA_AVAILABLE =
+            "com.ljpww72729.atblink.ACTION_DATA_AVAILABLE";
+    public final static String EXTRA_DATA =
+            "com.ljpww72729.atblink.EXTRA_DATA";
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        Log.i(TAG, "Starting BlinkActivity");
+    public IBinder onBind(Intent intent) {
+        blink = intent.getParcelableExtra(CURRENT_BLINK_DATA);
+        return mBinder;
+    }
 
-        PeripheralManagerService service = new PeripheralManagerService();
-        List<String> gpioList = service.getGpioList();
-        for (int i = 0; i < gpioList.size(); i++) {
-            Log.i(TAG, "gpio: " + gpioList.get(i));
+    @Override
+    public boolean onUnbind(Intent intent) {
+
+        return super.onUnbind(intent);
+    }
+
+    public class GattServerBinder extends Binder {
+        public GattServerService getService() {
+            return GattServerService.this;
         }
-        try {
-            String pinName = BoardDefaults.getGPIOForLED();
-            mLedGpio = service.openGpio(pinName);
-            mLedGpio.setDirection(Gpio.DIRECTION_OUT_INITIALLY_LOW);
-            Log.i(TAG, "Start blinking LED GPIO pin");
-            // Post a Runnable that continuously switch the state of the GPIO, blinking the
-            // corresponding LED
-            mHandler.post(mBlinkRunnable);
-        } catch (IOException e) {
-            Log.e(TAG, "Error on PeripheralIO API", e);
+    }
+
+    private final IBinder mBinder = new GattServerBinder();
+
+    /**
+     * Initializes a reference to the local Bluetooth adapter.
+     *
+     * @return Return true if the initialization is successful.
+     */
+    public boolean initialize() {
+        if (mBluetoothManager == null) {
+            mBluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
+            if (mBluetoothManager == null) {
+                Log.e(TAG, "Unable to initialize BluetoothManager.");
+                return false;
+            }
         }
+
 
         // 获取蓝牙服务
-        mBluetoothManager = (BluetoothManager) getSystemService(BLUETOOTH_SERVICE);
-        BluetoothAdapter bluetoothAdapter = mBluetoothManager.getAdapter();
+        bluetoothAdapter = mBluetoothManager.getAdapter();
         // We can't continue without proper Bluetooth support
         if (!checkBluetoothSupport(bluetoothAdapter)) {
-            finish();
+            return false;
         }
+        return true;
+    }
 
+    /**
+     * 初始化完毕后开启GattServer广播服务
+     */
+    public void startGattServer() {
+        if (bluetoothAdapter == null) {
+            Log.e(TAG, "Please first to initialize BluetoothManager.");
+            return;
+        }
         // Register for system Bluetooth events
         IntentFilter filter = new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED);
         registerReceiver(mBluetoothReceiver, filter);
@@ -110,8 +127,8 @@ public class BlinkActivity extends Activity {
             startAdvertising();
             startServer();
         }
-
     }
+
 
     /**
      * Verify the level of Bluetooth support provided by the hardware.
@@ -241,44 +258,6 @@ public class BlinkActivity extends Activity {
         }
     };
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        // Remove pending blink Runnable from the handler.
-        mHandler.removeCallbacks(mBlinkRunnable);
-        // Close the Gpio pin.
-        Log.i(TAG, "Closing LED GPIO pin");
-        try {
-            mLedGpio.close();
-        } catch (IOException e) {
-            Log.e(TAG, "Error on PeripheralIO API", e);
-        } finally {
-            mLedGpio = null;
-        }
-    }
-
-    private Runnable mBlinkRunnable = new Runnable() {
-        @Override
-        public void run() {
-            // Exit Runnable if the GPIO is already closed
-            if (mLedGpio == null) {
-                return;
-            }
-            try {
-                // Toggle the GPIO state
-//                mLedState = !mLedState;
-//                mLedGpio.setValue(mLedState);
-                mLedGpio.setValue(mLedState);
-                Log.d(TAG, "State set to " + mLedState);
-
-                // Reschedule the same runnable in {#INTERVAL_BETWEEN_BLINKS_MS} milliseconds
-                mHandler.postDelayed(mBlinkRunnable, INTERVAL_BETWEEN_BLINKS_MS);
-            } catch (IOException e) {
-                Log.e(TAG, "Error on PeripheralIO API", e);
-            }
-        }
-    };
-
     /**
      * Callback to handle incoming requests to the GATT server.
      * All read/write requests for characteristics and descriptors are handled here.
@@ -289,24 +268,28 @@ public class BlinkActivity extends Activity {
         public void onConnectionStateChange(BluetoothDevice device, int status, int newState) {
             if (newState == BluetoothProfile.STATE_CONNECTED) {
                 Log.i(TAG, "BluetoothDevice CONNECTED: " + device);
+                // TODO: 19/08/2017 lipeng  如果有设备链接，则广播同时获取IOT设备状态信息
+                broadcastUpdate(ACTION_GATT_CONNECTED);
             } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
                 Log.i(TAG, "BluetoothDevice DISCONNECTED: " + device);
                 //Remove device from any active subscriptions
                 mRegisteredDevices.remove(device);
+                // TODO: 19/08/2017 lipeng 如果设备链接断开，则广播，是否将IOT设备关闭待定
+                broadcastUpdate(ACTION_GATT_DISCONNECTED);
             }
         }
 
         @Override
         public void onCharacteristicReadRequest(BluetoothDevice device, int requestId, int offset,
                                                 BluetoothGattCharacteristic characteristic) {
-            long now = System.currentTimeMillis();
             if (BlinkProfile.BLINK_STATUS_CHAR.equals(characteristic.getUuid())) {
-                Log.i(TAG, "Read CurrentTime");
+
+                Log.i(TAG, "Read current blink status data");
                 mBluetoothGattServer.sendResponse(device,
                         requestId,
                         BluetoothGatt.GATT_SUCCESS,
                         0,
-                        new byte[]{1});
+                        blink.readBytes());
             } else {
                 // Invalid characteristic
                 Log.w(TAG, "Invalid Characteristic Read: " + characteristic.getUuid());
@@ -324,13 +307,17 @@ public class BlinkActivity extends Activity {
                                                  boolean preparedWrite, boolean responseNeeded,
                                                  int offset, byte[] value) {
             Log.i(TAG, "onCharacteristicWriteRequest: " + characteristic.getUuid());
+            // WARNING: 19/08/2017 lipeng 一次能写入的数据是多大呢？
             if (BlinkProfile.BLINK_STATUS_CHAR.equals(characteristic.getUuid())) {
+
                 int switchStatus = value[0];
                 if (switchStatus == 1) {
-                    mLedState = true;
+                    blink.setStatus(true);
                 } else {
-                    mLedState = false;
+                    blink.setStatus(false);
                 }
+                // 通知数据更新
+                broadcastUpdate(ACTION_DATA_AVAILABLE, characteristic);
                 if (responseNeeded) {
                     mBluetoothGattServer.sendResponse(device,
                             requestId,
@@ -409,5 +396,25 @@ public class BlinkActivity extends Activity {
             }
         }
     };
+
+
+    // 发送数据及状态
+    private void broadcastUpdate(final String action) {
+        final Intent intent = new Intent(action);
+        sendBroadcast(intent);
+    }
+
+    private void broadcastUpdate(final String action,
+                                 final BluetoothGattCharacteristic characteristic) {
+        final Intent intent = new Intent(action);
+        if (BlinkProfile.BLINK_STATUS_CHAR.equals(characteristic.getUuid())) {
+            intent.putExtra(EXTRA_DATA, blink);
+        }
+        sendBroadcast(intent);
+    }
+
+    public void setCurrentBlinkData(Blink blink) {
+        this.blink = blink;
+    }
 
 }
