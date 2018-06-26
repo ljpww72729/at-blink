@@ -16,7 +16,7 @@
 
 package com.ljpww72729.atblink.module;
 
-import com.google.android.things.pio.PeripheralManagerService;
+import com.google.android.things.pio.PeripheralManager;
 
 import android.os.Build;
 
@@ -67,8 +67,8 @@ public class BoardDefaults {
         // For the edison check the pin prefix
         // to always return Edison Breakout pin name when applicable.
         if (sBoardVariant.equals(DEVICE_EDISON)) {
-            PeripheralManagerService pioService = new PeripheralManagerService();
-            List<String> gpioList = pioService.getGpioList();
+            PeripheralManager peripheralManager = PeripheralManager.getInstance();
+            List<String> gpioList = peripheralManager.getGpioList();
             if (gpioList.size() != 0) {
                 String pin = gpioList.get(0);
                 if (pin.startsWith("IO")) {

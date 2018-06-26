@@ -22,13 +22,13 @@ android {
 
 dependencies {
     implementation "com.android.support:appcompat-v7:${rootProject.ext.supportVersion}"
-    compile "com.android.support:recyclerview-v7:${rootProject.ext.supportVersion}"
+    implementation "com.android.support:recyclerview-v7:${rootProject.ext.supportVersion}"
     // Needed to override play services
-    compile "com.android.support:support-v4:${rootProject.ext.supportVersion}"
+    implementation "com.android.support:support-v4:${rootProject.ext.supportVersion}"
 
-    compile 'android.arch.lifecycle:runtime:1.0.0'
-    compile 'android.arch.lifecycle:extensions:1.0.0-alpha9-1'
-    annotationProcessor 'android.arch.lifecycle:compiler:1.0.0-alpha9-1'
-    compile 'com.wilddog.client:wilddog-sync-android:2.3.7'
+    implementation "android.arch.lifecycle:runtime:${rootProject.ext.lifecycleVersion}"
+    implementation "android.arch.lifecycle:extensions:${rootProject.ext.lifecycleVersion}"
+    annotationProcessor "android.arch.lifecycle:compiler:${rootProject.ext.lifecycleVersion}"
+    implementation "com.wilddog.client:wilddog-sync-android:${rootProject.ext.wilddogVersion}"
 
 }

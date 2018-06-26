@@ -192,8 +192,8 @@ public class GPIOAddActivity extends FirebaseBaseActivity {
                 Map<String, Object> gpioValues = gpio.toMap();
                 Map<String, Object> childUpdates = new HashMap<>();
                 if (isFirebaseAddress) {
-                    // zzbpw()获取gpioDeviceFireRef引用路径
-                    childUpdates.put(gpioDeviceFireRef.zzbpw().toString() + "/" + gpio.getGpioId(), gpioValues);
+                    // zzg()获取gpioDeviceFireRef引用路径
+                    childUpdates.put(gpioDeviceFireRef.zzg().toString() + "/" + gpio.getGpioId(), gpioValues);
                     childUpdates.put("/" + RaspberryIotInfo.DEVICE + "/" + deviceId + "/changed", 1);
                     databaseFireRef.updateChildren(childUpdates, new DatabaseReference.CompletionListener() {
                         @Override

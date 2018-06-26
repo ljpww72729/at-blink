@@ -55,8 +55,6 @@ public class BlinkFirebaseActivity extends Activity {
     private boolean mLedState = true;
     private DatabaseReference selfGpioRef;
 
-    //test touch switch
-    private GPIO gpioLed;
     private Gpio gpioInput;
     private Intent httpServerService;
 
@@ -81,12 +79,12 @@ public class BlinkFirebaseActivity extends Activity {
         selfDeviceQuery.addChildEventListener(new ChildEventListener() {
             @Override
             public void onChildAdded(DataSnapshot dataSnapshot, String s) {
-                childBlinkChanged(dataSnapshot);
+//                childBlinkChanged(dataSnapshot);
             }
 
             @Override
             public void onChildChanged(DataSnapshot dataSnapshot, String s) {
-                childBlinkChanged(dataSnapshot);
+//                childBlinkChanged(dataSnapshot);
             }
 
             @Override
@@ -119,9 +117,6 @@ public class BlinkFirebaseActivity extends Activity {
                 gpio.setDirection(gpioEntry.getDirection());
                 gpio.setActiveType(gpioEntry.getActive());
                 gpio.setEdgeTriggerType(gpioEntry.getEdge());
-                if (gpioEntry.getGpio().equals("BCM2")) {
-                    gpioLed = gpioEntry;
-                }
                 if (gpioEntry.getDirection() != Gpio.DIRECTION_IN) {
                     Blink blink = new Blink();
                     blink.setStatus(gpioEntry.getStatus());
@@ -143,11 +138,12 @@ public class BlinkFirebaseActivity extends Activity {
             // Read the active high pin state
             try {
                 if (gpio.getValue()) {
+                    // TODO: 2017/11/26 lipeng 未完成
                     // Pin is HIGH
-                    selfGpioRef.child(gpioLed.getGpioId()).child(GPIO.P_STATUS).setValue(true);
+//                    selfGpioRef.child(gpio).child(GPIO.P_STATUS).setValue(true);
                 } else {
                     // Pin is LOW
-                    selfGpioRef.child(gpioLed.getGpioId()).child(GPIO.P_STATUS).setValue(false);
+//                    selfGpioRef.child(gpioLed.getGpioId()).child(GPIO.P_STATUS).setValue(false);
                 }
             } catch (IOException e) {
                 e.printStackTrace();
