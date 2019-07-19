@@ -6,7 +6,6 @@ import android.arch.lifecycle.LifecycleOwner;
 import android.arch.lifecycle.OnLifecycleEvent;
 import android.support.annotation.LayoutRes;
 import android.support.v4.app.FragmentActivity;
-import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -19,6 +18,8 @@ import com.wilddog.client.SyncReference;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+
+import androidx.recyclerview.widget.RecyclerView;
 
 /**
  * This class is a generic way of backing a {@link RecyclerView} with a Firebase location. It

@@ -14,7 +14,6 @@
 
 package com.ljpww72729.wilddog.ui.database;
 
-import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 
 import com.wilddog.client.DataSnapshot;

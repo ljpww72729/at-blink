@@ -20,6 +20,7 @@ public class ClassSnapshotParser<T> implements SnapshotParser<T> {
 
     @Override
     public T parseSnapshot(DataSnapshot snapshot) {
-        return (T) snapshot.getValue(mClass);
+//        return (T) snapshot.getValue(mClass);
+        return null;
     }
 }

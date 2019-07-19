@@ -2,11 +2,12 @@ package com.ljpww72729.wilddog.ui.database;
 
 import android.arch.lifecycle.LifecycleOwner;
 import android.support.annotation.LayoutRes;
-import android.support.v7.widget.RecyclerView;
 
 import com.wilddog.client.DataSnapshot;
 import com.wilddog.client.Query;
 import com.wilddog.client.SyncReference;
+
+import androidx.recyclerview.widget.RecyclerView;
 
 public abstract class WildDogIndexRecyclerAdapter<T, VH extends RecyclerView.ViewHolder>
         extends WildDogRecyclerAdapter<T, VH> {
