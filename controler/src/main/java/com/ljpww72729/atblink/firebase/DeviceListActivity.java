@@ -1,16 +1,12 @@
 package com.ljpww72729.atblink.firebase;
 
+import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.Query;
 
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
-import android.support.design.widget.Snackbar;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.helper.ItemTouchHelper;
 import android.util.ArrayMap;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -20,8 +16,11 @@ import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.ljpww72729.atblink.R;
 import com.ljpww72729.atblink.data.Device;
 import com.ljpww72729.atblink.data.RaspberryIotInfo;
-import com.ljpww72729.wilddog.ui.database.WildDogRecyclerAdapter;
-import com.wilddog.client.SyncReference;
+
+import androidx.annotation.Nullable;
+import androidx.recyclerview.widget.ItemTouchHelper;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 /**
  * Created by LinkedME06 on 2017/9/4.
@@ -32,11 +31,9 @@ public class DeviceListActivity extends FirebaseBaseActivity {
 
     // [START define_database_reference]
     private DatabaseReference deviceFireRef;
-    private SyncReference deviceWildRef;
     // [END define_database_reference]
 
     private FirebaseRecyclerAdapter<Device, DeviceViewHolder> mFireAdapter;
-    private WildDogRecyclerAdapter<Device, DeviceViewHolder> mWildAdapter;
     private RecyclerView mRecycler;
     private LinearLayoutManager mManager;
     private Device operateDevice;
@@ -49,8 +46,6 @@ public class DeviceListActivity extends FirebaseBaseActivity {
         // [START create_database_reference]
         if (isFirebaseAddress) {
             deviceFireRef = databaseFireRef.child(RaspberryIotInfo.DEVICE);
-        } else {
-            deviceWildRef = databaseWildRef.child(RaspberryIotInfo.DEVICE);
         }
         // [END create_database_reference]
 
@@ -78,20 +73,6 @@ public class DeviceListActivity extends FirebaseBaseActivity {
                 }
             };
             mRecycler.setAdapter(mFireAdapter);
-        } else {
-            com.wilddog.client.Query deviceQuery = getQuery(deviceWildRef);
-            mWildAdapter = new WildDogRecyclerAdapter<Device, DeviceViewHolder>(Device.class, R.layout.device_item,
-                    DeviceViewHolder.class, deviceQuery) {
-                @Override
-                protected void populateViewHolder(final DeviceViewHolder viewHolder, final Device model, final int position) {
-                    final SyncReference postRef = getRef(position);
-
-                    // Set click listener for the whole post view
-                    final String deviceKey = postRef.getKey();
-                    populateView(viewHolder, model, deviceKey);
-                }
-            };
-            mRecycler.setAdapter(mWildAdapter);
         }
 
         ItemTouchHelper itemTouchHelper = new ItemTouchHelper(createCallback());
@@ -112,9 +93,6 @@ public class DeviceListActivity extends FirebaseBaseActivity {
             if (isFirebaseAddress) {
                 databaseFireRef.child("/" + RaspberryIotInfo.DEVICE + "/" + deviceKey + "/connections").setValue(false);
                 databaseFireRef.child("/" + RaspberryIotInfo.DEVICE + "/" + deviceKey + "/changed").setValue(1);
-            } else {
-                databaseWildRef.child("/" + RaspberryIotInfo.DEVICE + "/" + deviceKey + "/connections").setValue(false);
-                databaseWildRef.child("/" + RaspberryIotInfo.DEVICE + "/" + deviceKey + "/changed").setValue(1);
             }
             checkedDeviceConnections.put(deviceKey, true);
         }
@@ -160,16 +138,12 @@ public class DeviceListActivity extends FirebaseBaseActivity {
             // 刷新列表，使其不变更
             if (isFirebaseAddress) {
                 mFireAdapter.notifyDataSetChanged();
-            } else {
-                mWildAdapter.notifyDataSetChanged();
             }
         } else {
             // 右滑去数据
             String deviceId = operateDevice == null ? "" : operateDevice.getDeviceId();
             if (isFirebaseAddress) {
                 deviceFireRef.child(deviceId).removeValue();
-            } else {
-                deviceWildRef.child(deviceId).removeValue();
             }
             Snackbar snackbar = Snackbar.make(findViewById(R.id.constraint_layout), getString(R.string.delete_ok), Snackbar.LENGTH_LONG);
             snackbar.setAction(R.string.undo, new View.OnClickListener() {
@@ -178,8 +152,6 @@ public class DeviceListActivity extends FirebaseBaseActivity {
                     //撤销删除
                     if (isFirebaseAddress) {
                         deviceFireRef.child(operateDevice.getDeviceId()).setValue(operateDevice);
-                    } else {
-                        deviceWildRef.child(operateDevice.getDeviceId()).setValue(operateDevice);
                     }
                 }
             });
@@ -188,10 +160,6 @@ public class DeviceListActivity extends FirebaseBaseActivity {
     }
 
     public Query getQuery(DatabaseReference databaseReference) {
-        return databaseReference.orderByKey();
-    }
-
-    public com.wilddog.client.Query getQuery(SyncReference databaseReference) {
         return databaseReference.orderByKey();
     }
 
@@ -217,9 +185,6 @@ public class DeviceListActivity extends FirebaseBaseActivity {
         super.onDestroy();
         if (mFireAdapter != null) {
             mFireAdapter.cleanup();
-        }
-        if (mWildAdapter != null) {
-            mWildAdapter.cleanup();
         }
     }
 

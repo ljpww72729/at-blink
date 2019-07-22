@@ -10,7 +10,6 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -21,6 +20,8 @@ import android.widget.TextView;
 import com.ljpww72729.atblink.data.Blink;
 
 import java.util.List;
+
+import androidx.appcompat.app.AppCompatActivity;
 
 public class BlinkControlActivity extends AppCompatActivity {
 

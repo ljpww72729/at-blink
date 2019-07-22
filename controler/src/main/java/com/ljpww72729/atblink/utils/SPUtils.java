@@ -3,13 +3,14 @@ package com.ljpww72729.atblink.utils;
 import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.v4.content.SharedPreferencesCompat;
 import android.text.TextUtils;
 
 import java.util.Map;
 import java.util.Set;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.core.content.SharedPreferencesCompat;
 
 /**
  * Created by LinkedME06 on 2017/9/29.

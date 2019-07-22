@@ -1,9 +1,9 @@
 package com.ljpww72729.atblink.utils;
 
-import android.support.v4.util.ArrayMap;
-
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import androidx.collection.ArrayMap;
 
 /**
  * String 帮助类

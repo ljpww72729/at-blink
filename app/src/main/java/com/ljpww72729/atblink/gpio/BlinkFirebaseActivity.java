@@ -45,8 +45,8 @@ import java.io.IOException;
 /**
  * Sample usage of the Gpio API that blinks an LE.
  *
- * Some boards, like Intel Edison, have onboard LEDs linked to specific GPIO pins.
- * The preferred GPIO pin to use on each board is in the {@link BoardDefaults} class.
+ * Some boards, like Intel Edison, have onboard LEDs linked to specific GPIO pins. The preferred
+ * GPIO pin to use on each board is in the {@link BoardDefaults} class.
  */
 public class BlinkFirebaseActivity extends Activity {
     private static final String TAG = BlinkFirebaseActivity.class.getSimpleName();
@@ -64,6 +64,7 @@ public class BlinkFirebaseActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.act_blink);
+        // 设置时间
         try {
             AlarmManager am = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
             am.setTimeZone("Asia/Shanghai");

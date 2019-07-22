@@ -1,7 +1,7 @@
 package com.ljpww72729.atblink.module.gpio;
 
 import com.google.android.things.pio.Gpio;
-import com.google.android.things.pio.PeripheralManagerService;
+import com.google.android.things.pio.PeripheralManager;
 
 import android.util.ArrayMap;
 import android.util.Log;
@@ -19,12 +19,12 @@ import static android.content.ContentValues.TAG;
 
 public class GpioServer {
 
-    private PeripheralManagerService service;
+    private PeripheralManager service;
     // TODO: 22/08/2017 lipeng 待完成
     private ArrayMap<String, Gpio> gpioArrayMap = new ArrayMap<>();
 
     public GpioServer() {
-        service = new PeripheralManagerService();
+        service = PeripheralManager.getInstance();
 //            List<String> gpioList = service.getGpioList();
 //            for (int i = 0; i < gpioList.size(); i++) {
 //                Log.i(TAG, "gpio 引脚: " + gpioList.get(i));

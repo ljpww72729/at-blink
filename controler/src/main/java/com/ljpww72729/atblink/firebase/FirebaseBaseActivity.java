@@ -8,8 +8,6 @@ import com.google.firebase.database.ValueEventListener;
 
 import android.graphics.Color;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
-import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.RelativeLayout;
@@ -18,9 +16,9 @@ import android.widget.TextView;
 import com.ljpww72729.atblink.R;
 import com.ljpww72729.atblink.data.Constants;
 import com.ljpww72729.atblink.utils.SPUtils;
-import com.wilddog.client.SyncError;
-import com.wilddog.client.SyncReference;
-import com.wilddog.client.WilddogSync;
+
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
 
 /**
  * Created by LinkedME06 on 2017/9/7.
@@ -30,7 +28,6 @@ public class FirebaseBaseActivity extends AppCompatActivity {
 
     public boolean isFirebaseAddress = true;
     public DatabaseReference databaseFireRef;
-    public SyncReference databaseWildRef;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -54,25 +51,6 @@ public class FirebaseBaseActivity extends AppCompatActivity {
 
                 @Override
                 public void onCancelled(DatabaseError error) {
-                    System.err.println("Listener was cancelled");
-                }
-            });
-        } else {
-            databaseWildRef = WilddogSync.getInstance().getReference();
-            SyncReference connectedRef = WilddogSync.getInstance().getReference(".info/connected");
-            connectedRef.addValueEventListener(new com.wilddog.client.ValueEventListener() {
-                @Override
-                public void onDataChange(com.wilddog.client.DataSnapshot snapshot) {
-                    boolean connected = (boolean) snapshot.getValue(Boolean.class);
-                    if (connected) {
-                        showFirebaseConnectedStatus(true);
-                    } else {
-                        showFirebaseConnectedStatus(false);
-                    }
-                }
-
-                @Override
-                public void onCancelled(SyncError error) {
                     System.err.println("Listener was cancelled");
                 }
             });

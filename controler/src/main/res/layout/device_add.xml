@@ -10,7 +10,7 @@
                 type="com.ljpww72729.atblink.data.Device"/>
     </data>
 
-    <android.support.constraint.ConstraintLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/constraint_layout"
             android:orientation="vertical"
             android:layout_width="match_parent"
@@ -73,5 +73,5 @@
                 app:layout_constraintRight_toRightOf="@+id/device_id"
                 app:layout_constraintBaseline_toBaselineOf="@+id/device_id"/>
 
-    </android.support.constraint.ConstraintLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

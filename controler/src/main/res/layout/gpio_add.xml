@@ -12,7 +12,7 @@
         <import type="com.ljpww72729.atblink.data.GPIO"/>
     </data>
 
-    <android.support.constraint.ConstraintLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/constraint_layout"
             android:orientation="vertical"
             android:layout_width="match_parent"
@@ -220,5 +220,5 @@
                 android:selectedItemPosition="@={gpio.edge}"
                 android:entries="@array/edge_array"/>
 
-    </android.support.constraint.ConstraintLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

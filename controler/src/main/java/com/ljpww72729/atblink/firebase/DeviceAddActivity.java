@@ -1,5 +1,6 @@
 package com.ljpww72729.atblink.firebase;
 
+import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -8,11 +9,7 @@ import com.google.firebase.database.ValueEventListener;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.databinding.DataBindingUtil;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
-import android.support.design.widget.Snackbar;
-import android.support.v7.app.AlertDialog;
 import android.text.TextUtils;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -23,11 +20,13 @@ import com.ljpww72729.atblink.R;
 import com.ljpww72729.atblink.data.Device;
 import com.ljpww72729.atblink.data.RaspberryIotInfo;
 import com.ljpww72729.atblink.databinding.DeviceAddBinding;
-import com.wilddog.client.SyncError;
-import com.wilddog.client.SyncReference;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
+import androidx.databinding.DataBindingUtil;
 
 /**
  * Created by LinkedME06 on 2017/9/5.
@@ -36,7 +35,6 @@ import java.util.regex.Pattern;
 public class DeviceAddActivity extends FirebaseBaseActivity {
 
     DatabaseReference deviceFireRef;
-    SyncReference deviceWildRef;
     DeviceAddBinding binding;
     Device device;
     private boolean updateDevice = false;
@@ -48,8 +46,6 @@ public class DeviceAddActivity extends FirebaseBaseActivity {
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         if (isFirebaseAddress) {
             deviceFireRef = databaseFireRef.child(RaspberryIotInfo.DEVICE);
-        } else {
-            deviceWildRef = databaseWildRef.child(RaspberryIotInfo.DEVICE);
         }
         Bundle bundle = getIntent().getExtras();
         if (bundle != null) {
@@ -83,23 +79,6 @@ public class DeviceAddActivity extends FirebaseBaseActivity {
 
                         }
                     });
-                } else {
-                    deviceWildRef.orderByChild(Device.P_DID).limitToLast(1).addListenerForSingleValueEvent(new com.wilddog.client.ValueEventListener() {
-                        @Override
-                        public void onDataChange(com.wilddog.client.DataSnapshot dataSnapshot) {
-                            String lastDeviceId = "";
-                            if (dataSnapshot.getChildrenCount() > 0) {
-                                com.wilddog.client.DataSnapshot dataSnapshotChildren = (com.wilddog.client.DataSnapshot) dataSnapshot.getChildren().iterator().next();
-                                lastDeviceId = dataSnapshotChildren.getKey();
-                            }
-                            autoGenerate(lastDeviceId);
-                        }
-
-                        @Override
-                        public void onCancelled(SyncError databaseError) {
-
-                        }
-                    });
                 }
             }
         });
@@ -107,7 +86,6 @@ public class DeviceAddActivity extends FirebaseBaseActivity {
 
     /**
      * 自动生成device id
-     * @param lastDeviceId
      */
     private void autoGenerate(String lastDeviceId) {
         String prefixIdStr = "lp_iot_";
@@ -161,8 +139,6 @@ public class DeviceAddActivity extends FirebaseBaseActivity {
                 }
                 if (isFirebaseAddress) {
                     deviceFireRef.child(device.getDeviceId()).setValue(device);
-                }else {
-                    deviceWildRef.child(device.getDeviceId()).setValue(device);
                 }
 
                 finish();

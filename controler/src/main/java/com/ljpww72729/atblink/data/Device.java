@@ -3,8 +3,6 @@ package com.ljpww72729.atblink.data;
 import com.google.firebase.database.Exclude;
 import com.google.firebase.database.IgnoreExtraProperties;
 
-import android.databinding.BaseObservable;
-import android.databinding.Bindable;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.text.TextUtils;
@@ -13,6 +11,9 @@ import com.ljpww72729.atblink.BR;
 
 import java.util.HashMap;
 import java.util.Map;
+
+import androidx.databinding.BaseObservable;
+import androidx.databinding.Bindable;
 
 
 /**

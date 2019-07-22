@@ -2,7 +2,7 @@ package com.ljpww72729.atblink;
 
 import com.google.android.things.pio.Gpio;
 import com.google.android.things.pio.GpioCallback;
-import com.google.android.things.pio.PeripheralManagerService;
+import com.google.android.things.pio.PeripheralManager;
 
 import android.app.Activity;
 import android.os.Bundle;
@@ -25,11 +25,10 @@ public class GpioInputActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Log.i(TAG, "Starting GpioInputActivity");
-
-        PeripheralManagerService service = new PeripheralManagerService();
+        PeripheralManager peripheralManager = PeripheralManager.getInstance();
         try {
             String pinName = BoardDefaults.getGPIOForLED();
-            mLedGpio = service.openGpio(pinName);
+            mLedGpio = peripheralManager.openGpio(pinName);
             mLedGpio.setDirection(Gpio.DIRECTION_IN);
             mLedGpio.setEdgeTriggerType(Gpio.EDGE_BOTH);
             mLedGpio.registerGpioCallback(gpioCallback);
@@ -43,6 +42,7 @@ public class GpioInputActivity extends Activity {
     }
 
     GpioCallback gpioCallback = new GpioCallback() {
+
         @Override
         public boolean onGpioEdge(Gpio gpio) {
             try {
@@ -50,13 +50,13 @@ public class GpioInputActivity extends Activity {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            return super.onGpioEdge(gpio);
+            return false;
         }
 
         @Override
         public void onGpioError(Gpio gpio, int error) {
-            super.onGpioError(gpio, error);
         }
+
     };
 
     @Override

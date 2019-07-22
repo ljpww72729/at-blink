@@ -1,12 +1,13 @@
 package com.ljpww72729.atblink.firebase;
 
-import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.SwitchCompat;
 import android.view.View;
 import android.widget.TextView;
 
 import com.ljpww72729.atblink.R;
 import com.ljpww72729.atblink.data.GPIO;
+
+import androidx.appcompat.widget.SwitchCompat;
+import androidx.recyclerview.widget.RecyclerView;
 
 /**
  * Created by LinkedME06 on 2017/9/4.

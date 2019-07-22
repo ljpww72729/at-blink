@@ -1,5 +1,6 @@
 package com.ljpww72729.atblink.firebase;
 
+import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -10,11 +11,6 @@ import com.google.firebase.database.Transaction;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
-import android.support.design.widget.Snackbar;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.helper.ItemTouchHelper;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -24,9 +20,11 @@ import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.ljpww72729.atblink.R;
 import com.ljpww72729.atblink.data.GPIO;
 import com.ljpww72729.atblink.data.RaspberryIotInfo;
-import com.ljpww72729.wilddog.ui.database.WildDogRecyclerAdapter;
-import com.wilddog.client.SyncError;
-import com.wilddog.client.SyncReference;
+
+import androidx.annotation.Nullable;
+import androidx.recyclerview.widget.ItemTouchHelper;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 /**
  * Created by LinkedME06 on 2017/9/5.
@@ -36,11 +34,9 @@ public class GPIOListActivity extends FirebaseBaseActivity {
     private static final String TAG = "GPIOListActivity";
     // [START define_database_reference]
     private DatabaseReference gpioDeviceFireRef;
-    private SyncReference gpioDeviceWildRef;
     // [END define_database_reference]
 
     private FirebaseRecyclerAdapter<GPIO, GPIOViewHolder> mFireAdapter;
-    private WildDogRecyclerAdapter<GPIO, GPIOViewHolder> mWildAdapter;
     private RecyclerView mRecycler;
     private LinearLayoutManager mManager;
     private String deviceId;
@@ -63,8 +59,6 @@ public class GPIOListActivity extends FirebaseBaseActivity {
         }
         if (isFirebaseAddress) {
             gpioDeviceFireRef = databaseFireRef.child(RaspberryIotInfo.GPIO).child(deviceId);
-        } else {
-            gpioDeviceWildRef = databaseWildRef.child(RaspberryIotInfo.GPIO).child(deviceId);
         }
 
         // [END create_database_reference]
@@ -94,22 +88,6 @@ public class GPIOListActivity extends FirebaseBaseActivity {
                 }
             };
             mRecycler.setAdapter(mFireAdapter);
-        } else {
-            // Set up FirebaseRecyclerAdapter with the Query
-            com.wilddog.client.Query gpioQuery = getQuery(gpioDeviceWildRef);
-            mWildAdapter = new WildDogRecyclerAdapter<GPIO, GPIOViewHolder>(GPIO.class, R.layout.gpio_item,
-                    GPIOViewHolder.class, gpioQuery) {
-                @Override
-                protected void populateViewHolder(final GPIOViewHolder viewHolder, final GPIO model, final int position) {
-                    final SyncReference postRef = getRef(position);
-
-                    // Set click listener for the whole post view
-                    final String gpioKey = postRef.getKey();
-                    populateView(viewHolder, model, gpioKey);
-
-                }
-            };
-            mRecycler.setAdapter(mWildAdapter);
         }
 
         ItemTouchHelper itemTouchHelper = new ItemTouchHelper(createCallback());
@@ -135,8 +113,6 @@ public class GPIOListActivity extends FirebaseBaseActivity {
                 if (!switchClick) {
                     if (isFirebaseAddress) {
                         switchFireChanged(gpioDeviceFireRef.child(gpioKey).child(GPIO.P_STATUS));
-                    } else {
-                        switchWildChanged(gpioDeviceWildRef.child(gpioKey).child(GPIO.P_STATUS));
                     }
                     switchClick = true;
                 }
@@ -175,36 +151,6 @@ public class GPIOListActivity extends FirebaseBaseActivity {
         }, false);
     }
 
-    private void switchWildChanged(SyncReference database) {
-        database.runTransaction(new com.wilddog.client.Transaction.Handler() {
-            @Override
-            public com.wilddog.client.Transaction.Result doTransaction(com.wilddog.client.MutableData mutableData) {
-                Object value = mutableData.getValue();
-                if (value == null) {
-                    return com.wilddog.client.Transaction.success(mutableData);
-                }
-                boolean status = (boolean) value;
-                status = !status;
-                mutableData.setValue(status);
-                return com.wilddog.client.Transaction.success(mutableData);
-            }
-
-            @Override
-            public void onComplete(SyncError syncError, boolean b, com.wilddog.client.DataSnapshot dataSnapshot) {
-                switchClick = false;
-                if (syncError == null) {
-                    // TODO: 2017/9/29 lipeng 此处设置在极端情况下存在不成功的问题，但下面snackbar提示成功
-                    databaseWildRef.child("/" + RaspberryIotInfo.DEVICE + "/" + deviceId + "/changed").setValue(1);
-                    Snackbar.make(findViewById(R.id.constraint_layout), R.string.operate_succeed, Snackbar.LENGTH_SHORT).show();
-                } else {
-                    Snackbar.make(findViewById(R.id.constraint_layout),
-                            getString(R.string.operate_failed_msg, syncError.getMessage()),
-                            Snackbar.LENGTH_SHORT).show();
-                }
-                Log.i(TAG, "postTransaction:onComplete:" + syncError);
-            }
-        }, false);
-    }
 
     private ItemTouchHelper.Callback createCallback() {
         return new ItemTouchHelper.Callback() {
@@ -237,16 +183,12 @@ public class GPIOListActivity extends FirebaseBaseActivity {
             // 刷新列表，使其不变更
             if (isFirebaseAddress) {
                 mFireAdapter.notifyDataSetChanged();
-            } else {
-                mWildAdapter.notifyDataSetChanged();
             }
         } else {
             // 右滑去数据
             String gpioId = operateGpio == null ? "" : operateGpio.getGpioId();
             if (isFirebaseAddress) {
                 gpioDeviceFireRef.child(gpioId).removeValue();
-            } else {
-                gpioDeviceWildRef.child(gpioId).removeValue();
             }
             Snackbar snackbar = Snackbar.make(findViewById(R.id.constraint_layout), getString(R.string.delete_ok), Snackbar.LENGTH_LONG);
             snackbar.setAction(R.string.undo, new View.OnClickListener() {
@@ -255,8 +197,6 @@ public class GPIOListActivity extends FirebaseBaseActivity {
                     //撤销删除
                     if (isFirebaseAddress) {
                         gpioDeviceFireRef.child(operateGpio.getGpioId()).setValue(operateGpio);
-                    } else {
-                        gpioDeviceWildRef.child(operateGpio.getGpioId()).setValue(operateGpio);
                     }
                 }
             });
@@ -268,18 +208,11 @@ public class GPIOListActivity extends FirebaseBaseActivity {
         return databaseReference.orderByKey();
     }
 
-    public com.wilddog.client.Query getQuery(SyncReference databaseReference) {
-        return databaseReference.orderByKey();
-    }
-
     @Override
     protected void onDestroy() {
         super.onDestroy();
         if (mFireAdapter != null) {
             mFireAdapter.cleanup();
-        }
-        if (mWildAdapter != null) {
-            mWildAdapter.cleanup();
         }
     }
 

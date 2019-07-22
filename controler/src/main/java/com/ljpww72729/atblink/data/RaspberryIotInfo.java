@@ -1,9 +1,10 @@
 package com.ljpww72729.atblink.data;
 
-import android.support.annotation.StringDef;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+
+import androidx.annotation.StringDef;
 
 /**
  * Created by LinkedME06 on 2017/9/4.

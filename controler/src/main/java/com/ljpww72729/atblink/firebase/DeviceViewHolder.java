@@ -2,7 +2,6 @@ package com.ljpww72729.atblink.firebase;
 
 import android.content.Context;
 import android.graphics.Color;
-import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.widget.TextView;
 
@@ -12,6 +11,8 @@ import com.ljpww72729.atblink.data.Device;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
+
+import androidx.recyclerview.widget.RecyclerView;
 
 /**
  * Created by LinkedME06 on 2017/9/4.

@@ -1,5 +1,6 @@
 package com.ljpww72729.atblink.firebase;
 
+import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -8,11 +9,7 @@ import com.google.firebase.database.ValueEventListener;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.databinding.DataBindingUtil;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
-import android.support.design.widget.Snackbar;
-import android.support.v7.app.AlertDialog;
 import android.text.TextUtils;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -24,13 +21,15 @@ import com.ljpww72729.atblink.data.Device;
 import com.ljpww72729.atblink.data.GPIO;
 import com.ljpww72729.atblink.data.RaspberryIotInfo;
 import com.ljpww72729.atblink.databinding.GpioAddBinding;
-import com.wilddog.client.SyncError;
-import com.wilddog.client.SyncReference;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
+import androidx.databinding.DataBindingUtil;
 
 
 /**
@@ -40,7 +39,6 @@ import java.util.regex.Pattern;
 public class GPIOAddActivity extends FirebaseBaseActivity {
 
     DatabaseReference gpioDeviceFireRef;
-    SyncReference gpioDeviceWildRef;
     GpioAddBinding binding;
     GPIO gpio;
     private String operate = RaspberryIotInfo.ADD;
@@ -77,8 +75,6 @@ public class GPIOAddActivity extends FirebaseBaseActivity {
         }
         if (isFirebaseAddress) {
             gpioDeviceFireRef = databaseFireRef.child(RaspberryIotInfo.GPIO).child(deviceId);
-        } else {
-            gpioDeviceWildRef = databaseWildRef.child(RaspberryIotInfo.GPIO).child(deviceId);
         }
         binding.setGpio(gpio);
         binding.autoGenerate.setOnClickListener(new View.OnClickListener() {
@@ -98,23 +94,6 @@ public class GPIOAddActivity extends FirebaseBaseActivity {
 
                         @Override
                         public void onCancelled(DatabaseError databaseError) {
-
-                        }
-                    });
-                } else {
-                    gpioDeviceWildRef.orderByChild(Device.P_DID).limitToLast(1).addListenerForSingleValueEvent(new com.wilddog.client.ValueEventListener() {
-                        @Override
-                        public void onDataChange(com.wilddog.client.DataSnapshot dataSnapshot) {
-                            String lastGpioId = "";
-                            if (dataSnapshot.getChildrenCount() > 0) {
-                                com.wilddog.client.DataSnapshot dataSnapshotChildren = (com.wilddog.client.DataSnapshot) dataSnapshot.getChildren().iterator().next();
-                                lastGpioId = dataSnapshotChildren.getKey();
-                            }
-                            autoGenerate(lastGpioId);
-                        }
-
-                        @Override
-                        public void onCancelled(SyncError databaseError) {
 
                         }
                     });
@@ -193,27 +172,11 @@ public class GPIOAddActivity extends FirebaseBaseActivity {
                 Map<String, Object> childUpdates = new HashMap<>();
                 if (isFirebaseAddress) {
                     // zzbpw()获取gpioDeviceFireRef引用路径
-                    childUpdates.put(gpioDeviceFireRef.zzbpw().toString() + "/" + gpio.getGpioId(), gpioValues);
+                    childUpdates.put(gpioDeviceFireRef.toString() + "/" + gpio.getGpioId(), gpioValues);
                     childUpdates.put("/" + RaspberryIotInfo.DEVICE + "/" + deviceId + "/changed", 1);
                     databaseFireRef.updateChildren(childUpdates, new DatabaseReference.CompletionListener() {
                         @Override
                         public void onComplete(DatabaseError databaseError, DatabaseReference databaseReference) {
-                            if (databaseError == null) {
-                                Snackbar.make(findViewById(R.id.constraint_layout), R.string.operate_succeed, Snackbar.LENGTH_SHORT).show();
-                                finish();
-                            } else {
-                                Snackbar.make(findViewById(R.id.constraint_layout),
-                                        getString(R.string.operate_failed_msg, databaseError.getMessage()),
-                                        Snackbar.LENGTH_SHORT).show();
-                            }
-                        }
-                    });
-                } else {
-                    childUpdates.put(gpioDeviceWildRef.getPath().toString() + "/" + gpio.getGpioId(), gpioValues);
-                    childUpdates.put("/" + RaspberryIotInfo.DEVICE + "/" + deviceId + "/changed", 1);
-                    databaseWildRef.updateChildren(childUpdates, new SyncReference.CompletionListener() {
-                        @Override
-                        public void onComplete(SyncError databaseError, SyncReference databaseReference) {
                             if (databaseError == null) {
                                 Snackbar.make(findViewById(R.id.constraint_layout), R.string.operate_succeed, Snackbar.LENGTH_SHORT).show();
                                 finish();
